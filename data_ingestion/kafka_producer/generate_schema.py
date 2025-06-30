@@ -1,0 +1,51 @@
+import json
+from pathlib import Path
+import os
+
+def main():
+    # Prepare folder
+    schema_dir = "data_ingestion/kafka_producer/schemas"
+    Path(schema_dir).mkdir(parents=True, exist_ok=True)
+
+    # Create schema
+    schema = {
+        "doc": "Schema for For Hire Vehicle data",
+        "type": "record",
+        "fields": [
+            {"name": "hvfhs_license_num", "type": "string"},
+            {"name": "dispatching_base_num", "type": "string"},
+            {"name": "originating_base_num", "type": "string"},
+            {"name": "request_datetime", "type": {"type": "long", "logicalType": "timestamp-millis"}},
+            {"name": "on_scene_datetime", "type": ["null", {"type": "long", "logicalType": "timestamp-millis"}]},
+            {"name": "pickup_datetime", "type": {"type": "long", "logicalType": "timestamp-millis"}},
+            {"name": "dropoff_datetime", "type": ["null", {"type": "long", "logicalType": "timestamp-millis"}]},
+            {"name": "PULocationID", "type": ["null", "int"]},
+            {"name": "DOLocationID", "type": ["null", "int"]},
+            {"name": "trip_miles", "type": ["null", "double"]},
+            {"name": "trip_time", "type": ["null", "long"]},
+            {"name": "base_passenger_fare", "type": ["null", "double"]},
+            {"name": "tolls", "type": ["null", "double"]},
+            {"name": "bcf", "type": ["null", "double"]},
+            {"name": "sales_tax", "type": ["null", "double"]},
+            {"name": "congestion_surcharge", "type": ["null", "double"]},
+            {"name": "airport_fee", "type": ["null", "double"]},
+            {"name": "tips", "type": ["null", "double"]},
+            {"name": "driver_pay", "type": ["null", "double"]},
+            {"name": "shared_request_flag", "type": ["null", "string"]},
+            {"name": "shared_match_flag", "type": ["null", "string"]},
+            {"name": "access_a_ride_flag", "type": ["null", "string"]},
+            {"name": "wav_request_flag", "type": ["null", "string"]},
+            {"name": "wav_match_flag", "type": ["null", "string"]},
+            {"name": "cbd_congestion_fee", "type": ["null", "double"]}
+        ],
+        "name": "CarForHireVehicle",
+        "namespace": "example.avro",
+    }
+
+    with open(os.path.join(schema_dir, 'schema_for_hire_car.avsc'), "w+") as f:
+        json.dump(schema, f)
+
+    return
+
+if __name__ == "__main__":
+    main()

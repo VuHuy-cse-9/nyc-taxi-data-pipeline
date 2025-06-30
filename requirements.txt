@@ -1,0 +1,11 @@
+pandas
+ipykernel
+pyarrow
+scikit-learn
+minio
+python-dotenv
+pyspark==4.0.0
+delta-spark==4.0.0
+avro
+python-schema-registry-client==2.6.1
+aiokafka
