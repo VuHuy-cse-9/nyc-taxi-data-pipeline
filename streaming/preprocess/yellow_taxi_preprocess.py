@@ -8,17 +8,17 @@ from streaming.preprocess.common import (
 )
 import pandas as pd
 import logging
-from schemas.models import TaxiType
+from schemas.models import TaxiType, TripType
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 JARS_PATH = f"{os.getcwd()}/jars"
 
-GREEN_TAXI_SCHEMA = DataTypes.ROW([
+YELLOW_TAXI_SCHEMA = DataTypes.ROW([
     DataTypes.FIELD("VendorID", DataTypes.INT()),
-    DataTypes.FIELD("lpep_pickup_datetime", DataTypes.STRING()),
-    DataTypes.FIELD("lpep_dropoff_datetime", DataTypes.STRING()),
+    DataTypes.FIELD("tpep_pickup_datetime", DataTypes.STRING()),
+    DataTypes.FIELD("tpep_dropoff_datetime", DataTypes.STRING()),
     DataTypes.FIELD("passenger_count", DataTypes.INT()),
     DataTypes.FIELD("trip_distance", DataTypes.DOUBLE()),
     DataTypes.FIELD("RatecodeID", DataTypes.INT()),
@@ -32,33 +32,56 @@ GREEN_TAXI_SCHEMA = DataTypes.ROW([
     DataTypes.FIELD("tip_amount", DataTypes.DOUBLE()),
     DataTypes.FIELD("tolls_amount", DataTypes.DOUBLE()),
     DataTypes.FIELD("improvement_surcharge", DataTypes.DOUBLE()),
-    DataTypes.FIELD("total_amount", DataTypes.DOUBLE()),
-    DataTypes.FIELD("ehail_fee", DataTypes.DOUBLE()),
-    DataTypes.FIELD("trip_type", DataTypes.DOUBLE()),
     DataTypes.FIELD("congestion_surcharge", DataTypes.DOUBLE()),
     DataTypes.FIELD("cbd_congestion_fee", DataTypes.DOUBLE()),
+    DataTypes.FIELD("Airport_fee", DataTypes.DOUBLE()),
 ])
+
+@udf(result_type=DataTypes.DOUBLE())
+def process_airport_fee(value):
+    if value is None:
+        return 0.0
+    return value
+
+@udf(result_type=DataTypes.DOUBLE())
+def estimate_total_amount(fare_amount, extra, mta_tax, tip_amount, tolls_amount, improvement_surcharge, airport_fee):
+    total_amount = 0.0
+    total_amount += fare_amount if fare_amount is not None else 0.0
+    total_amount += extra if extra is not None else 0.0
+    total_amount += mta_tax if mta_tax is not None else 0.0
+    total_amount += tip_amount if tip_amount is not None else 0.0
+    total_amount += tolls_amount if tolls_amount is not None else 0.0
+    total_amount += improvement_surcharge if improvement_surcharge is not None else 0.0
+    total_amount += airport_fee if airport_fee is not None else 0.0
+    return total_amount
 
 def preprocess(table: Table):
     return table.add_columns(
-        transform_ts_to_asia_timezone(col("lpep_pickup_datetime")).alias("pickup_datetime"),
-        transform_ts_to_asia_timezone(col("lpep_dropoff_datetime")).alias("dropoff_datetime"),
+        transform_ts_to_asia_timezone(col("tpep_pickup_datetime")).alias("pickup_datetime"),
+        transform_ts_to_asia_timezone(col("tpep_dropoff_datetime")).alias("dropoff_datetime"),
         ensure_boolean_type("store_and_fwd_flag", "Y").alias("p_store_and_fwd_flag"),
-        process_trip_type(col("trip_type")).alias("p_trip_type"),
         process_payment_type(col("payment_type")).alias("p_payment_type"),
-        lit(0.0).alias("airport_fee"),
-        lit(TaxiType.GREEN.value).alias("taxi_type"),
+        process_airport_fee(col("Airport_fee")).alias("airport_fee"),
+        estimate_total_amount(
+            col("fare_amount"),
+            col("extra"),
+            col("mta_tax"),
+            col("tip_amount"),
+            col("tolls_amount"),
+            col("improvement_surcharge"),
+            col("Airport_fee")
+        ).alias("total_amount"),
+        lit(TaxiType.YELLOW.value).alias("taxi_type"),
+        lit(TripType.STREET_HAIL.value).alias("trip_type"),
     ).drop_columns(
-        col("lpep_pickup_datetime"),
-        col("lpep_dropoff_datetime"),
-        col("ehail_fee"),
-        col("trip_type"),
+        col("tpep_pickup_datetime"),
+        col("tpep_dropoff_datetime"),
         col("payment_type"),
-        col("store_and_fwd_flag")
+        col("store_and_fwd_flag"),
+        col("Airport_fee")
     ).rename_columns(
         col("trip_distance").alias("trip_miles"),
-        col("p_store_and_fwd_flag").alias("store_and_fwd_flag"),
-        col("p_trip_type").alias("trip_type"),
+        col("p_store_and_fwd_flag").alias(name="store_and_fwd_flag"),
         col("p_payment_type").alias("payment_type"),
     ).add_columns(
         total_seconds_between_timestamps(col("dropoff_datetime"), 
@@ -75,10 +98,10 @@ if __name__ == "__main__":
 
     # Load sample data from parquet file
     logger.info("Loading sample data...")
-    df = pd.read_csv("dataset/green_taxi/green_taxi_sample.csv")
-    df = df[GREEN_TAXI_SCHEMA.names]
+    df = pd.read_csv("dataset/yellow_tripdata_2025-05.csv")
+    df = df[YELLOW_TAXI_SCHEMA.names]
 
-    table = t_env.from_pandas(df, schema=GREEN_TAXI_SCHEMA)
+    table = t_env.from_pandas(df, schema=YELLOW_TAXI_SCHEMA)
     table = preprocess(table)
 
 
