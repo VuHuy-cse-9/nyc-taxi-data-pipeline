@@ -1,6 +1,7 @@
-Dataset:
-https://www.kaggle.com/datasets/shrutimechlearn/churn-modelling
-https://www.synthesized.io/data-template-pages/bank-churn-modelling
+# NYC Data Processing Pipeline
 
+![](./assets/mlops2_architecture.png)
 
-python3 -m data_ingestion.kafka_producer.produce_arvo
+# Install dependency
+uv sync --extra spark
+uv sync --extra flink

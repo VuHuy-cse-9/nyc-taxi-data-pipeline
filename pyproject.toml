@@ -9,6 +9,23 @@ dependencies = [
     "minio>=7.2.16",
     "pandas>=2.3.1",
     "pydantic>=2.11.7",
-    "pyspark>=4.0.0",
     "python-dotenv>=1.1.1",
+]
+
+# Optional dependencies
+[project.optional-dependencies]
+spark = [
+    "pyspark>=4.0.0"
+]
+
+flink = [
+    "apache-flink>=2.1.0"
+]
+
+[tool.uv]
+conflicts = [
+    [
+      { extra = "spark" },
+      { extra = "flink" },
+    ],
 ]

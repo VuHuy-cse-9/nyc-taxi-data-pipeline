@@ -47,12 +47,6 @@ def create_spark_session() -> SparkSession:
         .config('spark.hadoop.fs.s3a.path.style.access', 'true')\
         .config('spark.hadoop.fs.s3a.impl', 'org.apache.hadoop.fs.s3a.S3AFileSystem')\
         .config('spark.hadoop.fs.s3a.connection.ssl.enabled', 'false')\
-        .config("hive.metastore.uris", METADATA_URI) \
-        .config("spark.sql.warehouse.dir", f"s3a://{WAREHOUSE_BUCKET}/nyc_taxi_dataset") \
-        .config("spark.sql.hive.metastore.version", "4.0.1") \
-        .config("spark.sql.hive.metastore.jars", "path") \
-        .config("spark.sql.hive.metastore.jars.path", "jars/hive-metastore-4.0.1.jar") \
-        .enableHiveSupport()\
         .config('spark.jars', jars)
 
     spark = builder.getOrCreate()
@@ -152,15 +146,10 @@ def write_to_warehouse(dataset2df: dict[str, DataFrame]):
     for dataset, df in dataset2df.items():
         # Save as parquet file
         df = df.sample(fraction=1.0, seed=32).sample(fraction=0.1, seed=23)  # Sample 10% of the data
-        # output_path = os.path.join('nyc_taxi_dataset', f"{dataset}.parquet")
-        # df.write.parquet(
-        #     f"s3a://{WAREHOUSE_BUCKET}/{output_path}", mode="overwrite", compression="snappy")
+        output_path = os.path.join('nyc_taxi_dataset', f"{dataset}.parquet")
+        df.write.parquet(
+            f"s3a://{WAREHOUSE_BUCKET}/{output_path}", mode="overwrite", compression="snappy")
 
-        # # Write DataFrame to Hive table # From Copilot :v.
-        table_name = dataset.replace('_dir', '').replace('-', '_')
-        df.write.mode("overwrite").saveAsTable(
-            table_name, format="parquet")
-        print(f"DataFrame written to Hive table: {table_name}")
 
     return
 
