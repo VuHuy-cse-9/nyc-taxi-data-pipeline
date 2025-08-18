@@ -7,8 +7,8 @@ from schemas.models import TripType, TaxiType, PaymentType
 
 
 @udf(result_type=DataTypes.TIMESTAMP_LTZ(3))
-def transform_ts_to_asia_timezone(value: str):
-    return datetime.strptime(value, "%Y-%m-%d %H:%M:%S").replace(
+def transform_ts_to_asia_timezone(value: str, format: str = "%Y-%m-%d %H:%M:%S"):
+    return datetime.strptime(value, format).replace(
         tzinfo=ZoneInfo("America/New_York")
     ).astimezone(ZoneInfo("Asia/Ho_Chi_Minh"))
 
