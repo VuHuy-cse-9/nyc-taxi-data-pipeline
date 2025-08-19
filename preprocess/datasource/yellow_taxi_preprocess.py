@@ -1,7 +1,9 @@
 from pyspark.sql import DataFrame
 import pyspark.sql.functions as F
-from preprocess.datasource.green_taxi_preprocess import transform_ts_to_asia_timezone, ensure_boolean_type
 from schemas.models import TripType, TaxiType
+from preprocess.datasource.common import (
+    transform_ts_to_asia_timezone, ensure_boolean_type, process_payment_type
+)
 
 def sum_columns(col_names: list[str])->F.Column:
     sum_col = F.lit(0.0)
@@ -90,6 +92,12 @@ def preprocess(df: DataFrame)->DataFrame:
         ).otherwise(
             (F.unix_timestamp('dropoff_datetime') - F.unix_timestamp('pickup_datetime')) * 60
         )
+    )
+
+    # Process payment_type column
+    df = df.withColumn(
+        'payment_type',
+        process_payment_type('payment_type')
     )
 
     return df

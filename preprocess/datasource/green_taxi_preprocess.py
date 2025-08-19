@@ -1,26 +1,8 @@
 from pyspark.sql import DataFrame
 import pyspark.sql.functions as F
 from schemas.models import TripType, TaxiType
-
-def transform_ts_to_asia_timezone(column_name: str) ->F.Column:
-    # Convert timestamp from New York timezone to Asia/Ho_Chi_Minh timezone
-    return F.when(
-        F.col(column_name).isNull(), F.lit(None),
-    ).otherwise(
-        F.convert_timezone(
-            F.lit("America/New_York"), F.lit("Asia/Ho_Chi_Minh"), column_name
-        )
-    )
-
-def ensure_boolean_type(column_name: str, true_value: str)->F.Column:
-    cleaned_column = F.trim(F.lower(F.col(column_name)))
-    return F.when(
-        F.col(column_name).isNull(), F.lit(None)
-    ).when(
-        cleaned_column == true_value.lower(), F.lit(True)
-    ).otherwise(
-        F.lit(False)
-    )
+from preprocess.datasource.common import (
+    transform_ts_to_asia_timezone, ensure_boolean_type, process_payment_type)
 
 def process_trip_type(column_name: str):
     return F.when(
@@ -89,6 +71,12 @@ def preprocess(df: DataFrame)->DataFrame:
         ).otherwise(
             (F.unix_timestamp('dropoff_datetime') - F.unix_timestamp('pickup_datetime')) * 60
         )
+    )
+
+    # Process payment_type column
+    df = df.withColumn(
+        'payment_type',
+        process_payment_type('payment_type')
     )
 
     return df
