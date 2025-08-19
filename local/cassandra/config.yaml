@@ -1,0 +1,75 @@
+cluster_name: 'Datasource2Cluster'
+
+# === CLUSTER CONFIGURATION ===
+
+# Enable or disable participation in the cluster ring.
+# Set to false to start a single-node dev instance without gossip.
+# For production, keep true.
+start_native_transport: false
+
+# Port for the native transport (CQL).
+native_transport_port: 9042
+
+# Address to bind the CQL native transport to.
+# Use 0.0.0.0 to allow connections from remote clients.
+# For security, bind to specific IP in production.
+native_transport_address: 0.0.0.0
+
+# Port for inter-node communication (gossip, streaming, etc.)
+storage_port: 7000
+
+# Address to bind for inter-node communication.
+# Must be a specific IP (not 0.0.0.0) in production.
+listen_address: 172.20.0.10
+
+# === DATA STORAGE ===
+
+# Directory where Cassandra stores data (commit logs, data files, etc.)
+data_file_directories:
+  - /var/lib/cassandra/data
+
+# Commit log directory
+commitlog_directory: /var/lib/cassandra/commitlog
+
+# Disk failure policy: stop, best_effort, ignore, die
+disk_failure_policy: stop
+
+# Enable CDC (Change Data Capture) if you want to capture row-level changes
+# Required for Kafka connectors or auditing.
+cdc_enabled: true  # Set to true if using CDC
+
+# === SNAPSHOT & COMMIT LOG SYNC ===
+
+# Commit log sync mode: periodic | group | batch
+commitlog_sync: periodic
+
+# How often to sync commit log in milliseconds (if commitlog_sync is periodic)
+commitlog_sync_period_in_ms: 10000
+
+
+# === TIMEOUTS ===
+# Timeout for client requests
+request_timeout_in_ms: 10000
+
+# Timeout for cross-node reads/writes
+read_request_timeout_in_ms: 5000
+range_request_timeout_in_ms: 10000
+write_request_timeout_in_ms: 2000
+truncate_request_timeout_in_ms: 60000
+
+# === SECURITY ===
+# Enable or disable client authentication
+# Set to true and configure authenticator to enable password auth.
+authenticator: AllowAllAuthenticator  # Options: AllowAllAuthenticator, PasswordAuthenticator
+
+# Enable role-based access control
+authorizer: AllowAllAuthorizer  # Options: AllowAllAuthorizer, CassandraAuthorizer
+
+# === PERFORMANCE & CACHE ===
+# Row and key cache sizes
+row_cache_size_in_mb: 0  # Row cache is off by default (not usually needed)
+
+key_cache_size_in_mb: 100  # Auto if 0; usually fine to leave as auto
+
+# Saved caches directory
+saved_caches_directory: /var/lib/cassandra/saved_caches

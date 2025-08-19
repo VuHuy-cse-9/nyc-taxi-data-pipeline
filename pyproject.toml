@@ -19,7 +19,9 @@ spark = [
 ]
 
 flink = [
-    "apache-flink>=2.1.0"
+    "apache-flink>=2.1.0",
+    "psycopg-binary>=3.2.9",
+    "psycopg[pool]>=3.2.9"
 ]
 
 [tool.uv]
