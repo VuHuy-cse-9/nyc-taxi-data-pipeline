@@ -12,11 +12,11 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 
 CREATE_TABLE_QUERY = """
-CREATE TABLE IF NOT EXISTS green_taxi (
+CREATE TABLE IF NOT EXISTS yellow_taxi (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     VendorID INT,
-    lpep_pickup_datetime VARCHAR(30),
-    lpep_dropoff_datetime VARCHAR(30),
+    tpep_pickup_datetime VARCHAR(30),
+    tpep_dropoff_datetime VARCHAR(30),
     passenger_count INT,
     trip_distance FLOAT,
     RatecodeID INT,
@@ -31,34 +31,33 @@ CREATE TABLE IF NOT EXISTS green_taxi (
     tolls_amount FLOAT,
     improvement_surcharge FLOAT,
     total_amount FLOAT,
-    ehail_fee FLOAT,
-    trip_type FLOAT,
     congestion_surcharge FLOAT,
+    airport_fee FLOAT,
     cbd_congestion_fee FLOAT
 );
 """
 
 INSERT_QUERY = """
-INSERT INTO green_taxi (
-    VendorID, lpep_pickup_datetime, lpep_dropoff_datetime, passenger_count,
+INSERT INTO yellow_taxi (
+    VendorID, tpep_pickup_datetime, tpep_dropoff_datetime, passenger_count,
     trip_distance, RatecodeID, store_and_fwd_flag, PULocationID,
     DOLocationID, payment_type, fare_amount, extra, mta_tax, tip_amount,
-    tolls_amount, improvement_surcharge, total_amount, ehail_fee,
-    trip_type, congestion_surcharge, cbd_congestion_fee
+    tolls_amount, improvement_surcharge, total_amount, airport_fee,
+    congestion_surcharge, cbd_congestion_fee
 ) VALUES (
-    %(VendorID)s, %(lpep_pickup_datetime)s, %(lpep_dropoff_datetime)s, %(passenger_count)s,
+    %(VendorID)s, %(tpep_pickup_datetime)s, %(tpep_dropoff_datetime)s, %(passenger_count)s,
     %(trip_distance)s, %(RatecodeID)s, %(store_and_fwd_flag)s, %(PULocationID)s,
     %(DOLocationID)s, %(payment_type)s, %(fare_amount)s, %(extra)s, %(mta_tax)s, %(tip_amount)s,
-    %(tolls_amount)s, %(improvement_surcharge)s, %(total_amount)s, %(ehail_fee)s,
-    %(trip_type)s, %(congestion_surcharge)s, %(cbd_congestion_fee)s
+    %(tolls_amount)s, %(improvement_surcharge)s, %(total_amount)s, %(airport_fee)s,
+    %(congestion_surcharge)s, %(cbd_congestion_fee)s
 )"""
 
 def initialize_db_connection(min_size=2, max_size=50)->AsyncConnectionPool:
-    DB_HOST = os.getenv("DATASOURCE1_HOST")
-    DB_PORT = os.getenv("DATASOURCE1_PORT", "5432")
-    DB_NAME = os.getenv("DATASOURCE1_DB", "default")
-    DB_USER = os.getenv("DATASOURCE1_USER", "datasource1")
-    DB_PASSWORD = os.getenv("DATASOURCE1_PASSWORD", "datasource1")
+    DB_HOST = os.getenv("DATASOURCE2_HOST")
+    DB_PORT = os.getenv("DATASOURCE2_PORT", "5432")
+    DB_NAME = os.getenv("DATASOURCE2_DB", "default")
+    DB_USER = os.getenv("DATASOURCE2_USER", "datasource2")
+    DB_PASSWORD = os.getenv("DATASOURCE2_PASSWORD", "datasource2")
     db_conn_info = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
     logger.info(f"Connecting to PostgreSQL database at {db_conn_info}")
     try:
@@ -111,17 +110,20 @@ async def main():
     try:
         await create_table(pool, CREATE_TABLE_QUERY)
 
-        # Read green taxi data
-        green_taxi_df = pd.read_csv("dataset/green_taxi/green_taxi_sample.csv")
-        green_taxi_df = green_taxi_df.sort_values(by="lpep_pickup_datetime").reset_index(drop=True)
-        for index, row in green_taxi_df.iterrows():
+        # Read yellow taxi data
+        yellow_taxi_df = pd.read_csv("dataset/yellow_tripdata_2025-05.csv")
+        yellow_taxi_df = yellow_taxi_df.rename(columns={
+            'Airport_fee': 'airport_fee',
+        })
+        yellow_taxi_df = yellow_taxi_df.sort_values(by="tpep_pickup_datetime").reset_index(drop=True)
+        for index, row in yellow_taxi_df.iterrows():
             record = {
                 key: v if pd.notna(v) else None for key, v in row.items()
             }
             await insert_record(pool, INSERT_QUERY, record)
 
-            await asyncio.sleep(0.5)  # To avoid overwhelming the database with too many requests
-            logger.info(f"Inserted record {index + 1}/{len(green_taxi_df)}")
+            await asyncio.sleep(2)  # To avoid overwhelming the database with too many requests
+            logger.info(f"Inserted record {index + 1}/{len(yellow_taxi_df)}")
     
     finally:
         await pool.close()
