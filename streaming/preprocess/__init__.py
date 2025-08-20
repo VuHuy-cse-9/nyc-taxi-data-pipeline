@@ -1,0 +1,3 @@
+from streaming.preprocess.fhvhv_preprocess import preprocess as fhvhv_preprocess
+from streaming.preprocess.green_taxi_preprocess import preprocess as green_taxi_preprocess
+from streaming.preprocess.yellow_taxi_preprocess import preprocess as yellow_taxi_preprocess

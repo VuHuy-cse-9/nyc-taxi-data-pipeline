@@ -44,3 +44,8 @@ def process_payment_type(value):
         return PaymentType.VOIDED_TRIP.value
     else:
         return None
+    
+
+@udf(result_type=DataTypes.STRING())
+def foo(value):
+    return None

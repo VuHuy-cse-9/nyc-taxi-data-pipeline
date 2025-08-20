@@ -87,7 +87,7 @@ if __name__ == "__main__":
     # Load sample data from parquet file
     logger.info("Loading sample data...")
     df = pd.read_csv(
-        "dataset/fhvhv/fhvhv_sample.csv/part-00000-54786787-dda7-45ca-91e2-a4e2f413b4c2-c000.csv")
+        "dataset/samples/csv/fhvhv.csv")
     df = df[FHVHV_TAXI_SCHEMA.names]
 
     table = t_env.from_pandas(df, schema=FHVHV_TAXI_SCHEMA)
