@@ -1,0 +1,15 @@
+{
+    "name": "datasource3",  
+    "config": {
+      "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+      "database.hostname": "datasource1",
+      "database.port": "5432",
+      "database.user": "datasource1",
+      "database.password": "datasource1",
+      "database.dbname" : "default",
+      "plugin.name": "pgoutput",
+      "database.server.name": "customer1",
+      "table.include.list": "public.for_hire_vehicle",
+      "topic.prefix": "raw"
+    }
+}

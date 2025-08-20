@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 # Kafka settings
 BOOTSTRAP_SERVERS = "localhost:9092"
-TOPIC = "raw.public.yellow_taxi"
+TOPIC = "raw.public.for_hire_vehicle"
 GROUP_ID = "kafka_produce_sample_group"
 
 
@@ -23,7 +23,7 @@ async def consume_and_produce():
     await producer.start()
 
     # Load sample data
-    with open("dataset/samples/debezium_yellow_taxi.json", "r") as file:
+    with open("dataset/samples/debezium_for_hire_vehicle.json", "r") as file:
         sample_data = json.loads(s=file.read())
 
     print(f"Sample data loaded: {sample_data}")

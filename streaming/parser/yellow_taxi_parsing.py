@@ -1,14 +1,8 @@
 import os
-from pyflink.table import EnvironmentSettings, TableEnvironment, DataTypes, Table
-from pyflink.table.expressions import col, lit
-from pyflink.table.udf import udf
-from streaming.preprocess.common import (
-    transform_ts_to_asia_timezone, ensure_boolean_type, total_seconds_between_timestamps,
-    process_trip_type, process_payment_type
-)
+from pyflink.table import EnvironmentSettings, TableEnvironment, Table
+from pyflink.table.expressions import col
 import pandas as pd
 import logging
-from schemas.models import TaxiType
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
