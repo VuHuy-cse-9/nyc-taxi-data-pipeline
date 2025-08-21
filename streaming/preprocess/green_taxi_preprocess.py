@@ -15,7 +15,8 @@ logger = logging.getLogger(__name__)
 
 JARS_PATH = f"{os.getcwd()}/jars"
 
-GREEN_TAXI_SCHEMA = DataTypes.ROW([
+SINK_GREEN_TAXI_SCHEMA = DataTypes.ROW([
+    DataTypes.FIELD("id", DataTypes.STRING()),
     DataTypes.FIELD("VendorID", DataTypes.INT()),
     DataTypes.FIELD("lpep_pickup_datetime", DataTypes.STRING()),
     DataTypes.FIELD("lpep_dropoff_datetime", DataTypes.STRING()),
@@ -46,8 +47,8 @@ def preprocess(table: Table):
         ensure_boolean_type(col("store_and_fwd_flag"), "Y").alias("p_store_and_fwd_flag"),
         process_trip_type(col("trip_type")).alias("p_trip_type"),
         process_payment_type(col("payment_type")).alias("p_payment_type"),
-        lit(0.0).alias("airport_fee"),
-        lit(TaxiType.GREEN.value).alias("taxi_type"),
+        lit(0.0).cast(DataTypes.DOUBLE()).alias("airport_fee"),
+        lit(TaxiType.GREEN.value).cast(DataTypes.STRING()).alias("taxi_type"),
     ).drop_columns(
         col("lpep_pickup_datetime"),
         col("lpep_dropoff_datetime"),

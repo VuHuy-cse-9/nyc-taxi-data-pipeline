@@ -9,7 +9,7 @@ def ensure_boolean_type(column: Expression, true_value: str):
 def process_trip_type(column: Expression):
     return if_then_else(
         column.is_null, 
-        lit(TripType.UNKNOWN.value), 
+        null_of(DataTypes.STRING()), 
         if_then_else(
             column == 1.0, 
             lit(TripType.STREET_HAIL.value), 
