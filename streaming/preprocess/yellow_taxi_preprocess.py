@@ -1,10 +1,9 @@
 import os
 from pyflink.table import EnvironmentSettings, TableEnvironment, DataTypes, Table
-from pyflink.table.expressions import col, lit
+from pyflink.table.expressions import col, lit, TimePointUnit, to_timestamp, Expression, if_then_else, timestamp_diff, coalesce
 from pyflink.table.udf import udf
 from streaming.preprocess.common import (
-    transform_ts_to_asia_timezone, ensure_boolean_type, total_seconds_between_timestamps,
-    process_trip_type, process_payment_type
+    ensure_boolean_type, process_payment_type
 )
 import pandas as pd
 import logging
@@ -34,43 +33,32 @@ YELLOW_TAXI_SCHEMA = DataTypes.ROW([
     DataTypes.FIELD("improvement_surcharge", DataTypes.DOUBLE()),
     DataTypes.FIELD("congestion_surcharge", DataTypes.DOUBLE()),
     DataTypes.FIELD("cbd_congestion_fee", DataTypes.DOUBLE()),
-    DataTypes.FIELD("Airport_fee", DataTypes.DOUBLE()),
+    DataTypes.FIELD("airport_fee", DataTypes.DOUBLE()),
 ])
 
-@udf(result_type=DataTypes.DOUBLE())
-def process_airport_fee(value):
-    if value is None:
-        return 0.0
-    return value
+def process_airport_fee(column: Expression):
+    return if_then_else(column.is_null, lit(0.0), column)
 
-@udf(result_type=DataTypes.DOUBLE())
-def estimate_total_amount(fare_amount, extra, mta_tax, tip_amount, tolls_amount, improvement_surcharge, airport_fee):
-    total_amount = 0.0
-    total_amount += fare_amount if fare_amount is not None else 0.0
-    total_amount += extra if extra is not None else 0.0
-    total_amount += mta_tax if mta_tax is not None else 0.0
-    total_amount += tip_amount if tip_amount is not None else 0.0
-    total_amount += tolls_amount if tolls_amount is not None else 0.0
-    total_amount += improvement_surcharge if improvement_surcharge is not None else 0.0
-    total_amount += airport_fee if airport_fee is not None else 0.0
+def estimate_total_amount(fare_amount: Expression, 
+                          extra: Expression, mta_tax: Expression, tip_amount: Expression, 
+                          tolls_amount: Expression, improvement_surcharge: Expression, airport_fee: Expression):
+    total_amount = lit(0.0)
+    total_amount += if_then_else(fare_amount.is_null, 0.0, fare_amount)
+    total_amount += if_then_else(extra.is_null, 0.0, extra)
+    total_amount += if_then_else(mta_tax.is_null, 0.0, mta_tax)
+    total_amount += if_then_else(tip_amount.is_null, 0.0, tip_amount)
+    total_amount += if_then_else(tolls_amount.is_null, 0.0, tolls_amount)
+    total_amount += if_then_else(improvement_surcharge.is_null, 0.0, improvement_surcharge)
+    total_amount += if_then_else(airport_fee.is_null, 0.0, airport_fee)
     return total_amount
 
 def preprocess(table: Table):
     return table.add_columns(
-        transform_ts_to_asia_timezone(col("tpep_pickup_datetime")).alias("pickup_datetime"),
-        transform_ts_to_asia_timezone(col("tpep_dropoff_datetime")).alias("dropoff_datetime"),
-        ensure_boolean_type("store_and_fwd_flag", "Y").alias("p_store_and_fwd_flag"),
+        to_timestamp(col("tpep_pickup_datetime")).alias("pickup_datetime"),
+        to_timestamp(col("tpep_dropoff_datetime")).alias("dropoff_datetime"),
+        ensure_boolean_type(col("store_and_fwd_flag"), "Y").alias("p_store_and_fwd_flag"),
         process_payment_type(col("payment_type")).alias("p_payment_type"),
-        process_airport_fee(col("Airport_fee")).alias("airport_fee"),
-        estimate_total_amount(
-            col("fare_amount"),
-            col("extra"),
-            col("mta_tax"),
-            col("tip_amount"),
-            col("tolls_amount"),
-            col("improvement_surcharge"),
-            col("Airport_fee")
-        ).alias("total_amount"),
+        process_airport_fee(col("airport_fee")).alias("p_airport_fee"),
         lit(TaxiType.YELLOW.value).alias("taxi_type"),
         lit(TripType.STREET_HAIL.value).alias("trip_type"),
     ).drop_columns(
@@ -78,14 +66,29 @@ def preprocess(table: Table):
         col("tpep_dropoff_datetime"),
         col("payment_type"),
         col("store_and_fwd_flag"),
-        col("Airport_fee")
+        col("airport_fee")
     ).rename_columns(
         col("trip_distance").alias("trip_miles"),
         col("p_store_and_fwd_flag").alias(name="store_and_fwd_flag"),
         col("p_payment_type").alias("payment_type"),
+        col("p_airport_fee").alias("airport_fee"),
     ).add_columns(
-        total_seconds_between_timestamps(col("dropoff_datetime"), 
-                                         col("pickup_datetime")).alias("trip_duration"),
+        estimate_total_amount(
+            col("fare_amount"),
+            col("extra"),
+            col("mta_tax"),
+            col("tip_amount"),
+            col("tolls_amount"),
+            col("improvement_surcharge"),
+            col("airport_fee")
+        ).alias("total_amount_extra"),
+        timestamp_diff(TimePointUnit.SECOND, 
+                       col("pickup_datetime"), 
+                       col("dropoff_datetime")).alias("trip_duration"),
+    ).add_or_replace_columns(
+        coalesce(col('total_amount'), col('total_amount_extra')).alias('total_amount')
+    ).drop_columns(
+        col('total_amount_extra')
     )
 
 if __name__ == "__main__":

@@ -3,9 +3,9 @@ from pyflink.table import EnvironmentSettings, TableEnvironment, DataTypes, Tabl
 from pyflink.table.expressions import col, lit
 from pyflink.table.udf import udf
 from streaming.preprocess.common import (
-    transform_ts_to_asia_timezone, ensure_boolean_type, total_seconds_between_timestamps,
-    process_trip_type, process_payment_type
+    ensure_boolean_type, process_trip_type, process_payment_type
 )
+from pyflink.table.expressions import to_timestamp, timestamp_diff, TimePointUnit
 import pandas as pd
 import logging
 from schemas.models import TaxiType
@@ -41,9 +41,9 @@ GREEN_TAXI_SCHEMA = DataTypes.ROW([
 
 def preprocess(table: Table):
     return table.add_columns(
-        transform_ts_to_asia_timezone(col("lpep_pickup_datetime")).alias("pickup_datetime"),
-        transform_ts_to_asia_timezone(col("lpep_dropoff_datetime")).alias("dropoff_datetime"),
-        ensure_boolean_type("store_and_fwd_flag", "Y").alias("p_store_and_fwd_flag"),
+        to_timestamp(col("lpep_pickup_datetime")).alias("pickup_datetime"),
+        to_timestamp(col("lpep_dropoff_datetime")).alias("dropoff_datetime"),
+        ensure_boolean_type(col("store_and_fwd_flag"), "Y").alias("p_store_and_fwd_flag"),
         process_trip_type(col("trip_type")).alias("p_trip_type"),
         process_payment_type(col("payment_type")).alias("p_payment_type"),
         lit(0.0).alias("airport_fee"),
@@ -61,8 +61,9 @@ def preprocess(table: Table):
         col("p_trip_type").alias("trip_type"),
         col("p_payment_type").alias("payment_type"),
     ).add_columns(
-        total_seconds_between_timestamps(col("dropoff_datetime"), 
-                                         col("pickup_datetime")).alias("trip_duration"),
+        timestamp_diff(TimePointUnit.SECOND, 
+                       col("pickup_datetime"), 
+                       col("dropoff_datetime")).alias("trip_duration"),
     )
 
 if __name__ == "__main__":

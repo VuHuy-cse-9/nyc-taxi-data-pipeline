@@ -1,8 +1,8 @@
 import os
-from pyflink.table import EnvironmentSettings, TableEnvironment, DataTypes, Table
-from pyflink.table.expressions import col
+from pyflink.table import EnvironmentSettings, TableEnvironment, DataTypes, Table, TableDescriptor, Schema
+from pyflink.table.expressions import col, to_timestamp
 from streaming.preprocess.common import (
-    transform_ts_to_asia_timezone, ensure_boolean_type,
+    ensure_boolean_type,
 )
 import pandas as pd
 import logging
@@ -12,46 +12,18 @@ logger = logging.getLogger(__name__)
 
 JARS_PATH = f"{os.getcwd()}/jars"
 
-FHVHV_TAXI_SCHEMA = DataTypes.ROW([
-    DataTypes.FIELD("hvfhs_license_num", DataTypes.STRING()),
-    DataTypes.FIELD("dispatching_base_num", DataTypes.STRING()),
-    DataTypes.FIELD("originating_base_num", DataTypes.STRING()),
-    DataTypes.FIELD("request_datetime", DataTypes.STRING()),
-    DataTypes.FIELD("on_scene_datetime", DataTypes.STRING()),
-    DataTypes.FIELD("pickup_datetime",DataTypes.STRING()),
-    DataTypes.FIELD("dropoff_datetime", DataTypes.STRING()),
-    DataTypes.FIELD("PULocationID", DataTypes.INT()),
-    DataTypes.FIELD("DOLocationID", DataTypes.INT()),
-    DataTypes.FIELD("trip_miles", DataTypes.DOUBLE()),
-    DataTypes.FIELD("trip_time", DataTypes.DOUBLE()),
-    DataTypes.FIELD("base_passenger_fare", DataTypes.DOUBLE()),
-    DataTypes.FIELD("tolls", DataTypes.DOUBLE()),
-    DataTypes.FIELD("bcf", DataTypes.DOUBLE()),
-    DataTypes.FIELD("sales_tax", DataTypes.DOUBLE()),
-    DataTypes.FIELD("congestion_surcharge", DataTypes.DOUBLE()),
-    DataTypes.FIELD("airport_fee", DataTypes.DOUBLE()),
-    DataTypes.FIELD("tips", DataTypes.DOUBLE()),
-    DataTypes.FIELD("driver_pay", DataTypes.DOUBLE()),
-    DataTypes.FIELD("shared_request_flag", DataTypes.STRING()),
-    DataTypes.FIELD("shared_match_flag", DataTypes.STRING()),
-    DataTypes.FIELD("access_a_ride_flag", DataTypes.STRING()),
-    DataTypes.FIELD("wav_request_flag", DataTypes.STRING()),
-    DataTypes.FIELD("wav_match_flag", DataTypes.STRING()),
-    DataTypes.FIELD("cbd_congestion_fee", DataTypes.DOUBLE()),
-])
-
 def preprocess(table: Table):
     datetime_format = "%Y-%m-%dT%H:%M:%S.%f"
     return table.add_columns(
-        transform_ts_to_asia_timezone(col("request_datetime"), datetime_format).alias("p_request_datetime"),
-        transform_ts_to_asia_timezone(col("on_scene_datetime"), datetime_format).alias("p_on_scene_datetime"),
-        transform_ts_to_asia_timezone(col("pickup_datetime"), datetime_format).alias("p_pickup_datetime"),
-        transform_ts_to_asia_timezone(col("dropoff_datetime"), datetime_format).alias("p_dropoff_datetime"),
-        ensure_boolean_type("shared_request_flag", "Y").alias("p_shared_request_flag"),
-        ensure_boolean_type("shared_match_flag", "Y").alias("p_shared_match_flag"),
-        ensure_boolean_type("access_a_ride_flag", "Y").alias("p_access_a_ride_flag"),
-        ensure_boolean_type("wav_request_flag", "Y").alias("p_wav_request_flag"),
-        ensure_boolean_type("wav_match_flag", "Y").alias("p_wav_match_flag"),
+        to_timestamp(col("request_datetime"), datetime_format).alias("p_request_datetime"),
+        to_timestamp(col("on_scene_datetime"), datetime_format).alias("p_on_scene_datetime"),
+        to_timestamp(col("pickup_datetime"), datetime_format).alias("p_pickup_datetime"),
+        to_timestamp(col("dropoff_datetime"), datetime_format).alias("p_dropoff_datetime"),
+        ensure_boolean_type(col("shared_request_flag"), "Y").alias("p_shared_request_flag"),
+        ensure_boolean_type(col("shared_match_flag"), "Y").alias("p_shared_match_flag"),
+        ensure_boolean_type(col("access_a_ride_flag"), "Y").alias("p_access_a_ride_flag"),
+        ensure_boolean_type(col("wav_request_flag"), "Y").alias("p_wav_request_flag"),
+        ensure_boolean_type(col("wav_match_flag"), "Y").alias("p_wav_match_flag"),
     ).drop_columns(
         col("request_datetime"),
         col("on_scene_datetime"),
@@ -83,14 +55,35 @@ if __name__ == "__main__":
         environment_settings=EnvironmentSettings.in_streaming_mode()
     )
     t_env.get_config().set("table.local-time-zone", "America/New_York")
+    t_env.get_config().set(
+        "pipeline.jars",
+        f"file://{JARS_PATH}/flink-connector-kafka-4.0.0-2.0.jar;"
+        + f"file://{JARS_PATH}/kafka-clients-3.9.0.jar"
+    )
+
+    t_env.create_temporary_table(
+        "raw_for_hire_vehicle",
+        TableDescriptor.for_connector("kafka")
+        .option("topic", "parsed.public.for_hire_vehicle")
+        .option("properties.bootstrap.servers", value="localhost:9092")
+        .option("properties.group.id", "parser-consumer-1-group")
+        .option("scan.startup.mode", "latest-offset")
+        .format("json")
+        .schema(Schema.new_builder().from_row_data_type(
+            FHVHV_TAXI_SCHEMA
+        ).build())
+        .build()
+    )
+
+    table = t_env.from_path("raw_for_hire_vehicle")
 
     # Load sample data from parquet file
     logger.info("Loading sample data...")
-    df = pd.read_csv(
-        "dataset/samples/csv/fhvhv.csv")
-    df = df[FHVHV_TAXI_SCHEMA.names]
+    # df = pd.read_csv(
+    #     "dataset/samples/csv/fhvhv.csv")
+    # df = df[FHVHV_TAXI_SCHEMA.names]
 
-    table = t_env.from_pandas(df, schema=FHVHV_TAXI_SCHEMA)
+    # table = t_env.from_pandas(df, schema=FHVHV_TAXI_SCHEMA)
     table = preprocess(table)
 
 

@@ -1,51 +1,33 @@
-from pyflink.table.expressions import col, to_timestamp
-from pyflink.table.udf import udf
+from pyflink.table.expressions import col, coalesce, lit, if_then_else, null_of, Expression
 from pyflink.table import DataTypes
-from datetime import datetime
-from zoneinfo import ZoneInfo
-from schemas.models import TripType, TaxiType, PaymentType
+from schemas.models import TripType, PaymentType
 
 
-@udf(result_type=DataTypes.TIMESTAMP_LTZ(3))
-def transform_ts_to_asia_timezone(value: str, format: str = "%Y-%m-%d %H:%M:%S"):
-    return datetime.strptime(value, format).replace(
-        tzinfo=ZoneInfo("America/New_York")
-    ).astimezone(ZoneInfo("Asia/Ho_Chi_Minh"))
+def ensure_boolean_type(column: Expression, true_value: str):
+    return column.lower_case.trim().similar(lit(true_value.lower()))
 
-def ensure_boolean_type(column_name: str, true_value: str):
-    return col(column_name).lower_case.trim().similar(true_value.lower())
-
-@udf(result_type=DataTypes.DOUBLE())
-def total_seconds_between_timestamps(start: datetime, end: datetime):
-    return (end - start).total_seconds()
-
-@udf(result_type=DataTypes.STRING())
-def process_trip_type(value):
-    if value == 1.0:
-        return TripType.STREET_HAIL.value
-    elif value == 2.0:
-        return TripType.DISPATCH.value
-    else:
-        return None
+def process_trip_type(column: Expression):
+    return if_then_else(
+        column.is_null, 
+        lit(TripType.UNKNOWN.value), 
+        if_then_else(
+            column == 1.0, 
+            lit(TripType.STREET_HAIL.value), 
+            lit(TripType.DISPATCH.value)
+        )
+    )
     
-@udf(result_type=DataTypes.STRING())
-def process_payment_type(value):
-    if value == 1:
-        return PaymentType.CREDIT_CARD.value
-    elif value == 2:
-        return PaymentType.CASH.value
-    elif value == 3:
-        return PaymentType.NO_CHARGE.value
-    elif value == 4:
-        return PaymentType.DISPUTE.value
-    elif value == 5:
-        return PaymentType.UNKNOWN.value
-    elif value == 6:
-        return PaymentType.VOIDED_TRIP.value
-    else:
-        return None
-    
-
-@udf(result_type=DataTypes.STRING())
-def foo(value):
-    return None
+def process_payment_type(value: Expression):
+    """
+    table.select(
+        process_payment_type(col("payment_type"))
+    )
+    """
+    return coalesce(
+        if_then_else(value == 1, lit(PaymentType.CREDIT_CARD.value), null_of(DataTypes.STRING())),
+        if_then_else(value == 2, lit(PaymentType.CASH.value), null_of(DataTypes.STRING())),
+        if_then_else(value == 3, lit(PaymentType.NO_CHARGE.value), null_of(DataTypes.STRING())),
+        if_then_else(value == 4, lit(PaymentType.DISPUTE.value), null_of(DataTypes.STRING())),
+        if_then_else(value == 5, lit(PaymentType.UNKNOWN.value), null_of(DataTypes.STRING())),
+        if_then_else(value == 6, lit(PaymentType.VOIDED_TRIP.value), null_of(DataTypes.STRING()))
+    )
