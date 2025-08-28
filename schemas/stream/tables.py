@@ -1,149 +1,4 @@
-from pyflink.table import Table, TableEnvironment, DataTypes
-
-FHVHV_TAXI_SCHEMA = DataTypes.ROW([
-    DataTypes.FIELD("hvfhs_license_num", DataTypes.STRING()),
-    DataTypes.FIELD("dispatching_base_num", DataTypes.STRING()),
-    DataTypes.FIELD("originating_base_num", DataTypes.STRING()),
-    DataTypes.FIELD("request_datetime", DataTypes.STRING()),
-    DataTypes.FIELD("on_scene_datetime", DataTypes.STRING()),
-    DataTypes.FIELD("pickup_datetime",DataTypes.STRING()),
-    DataTypes.FIELD("dropoff_datetime", DataTypes.STRING()),
-    DataTypes.FIELD("PULocationID", DataTypes.INT()),
-    DataTypes.FIELD("DOLocationID", DataTypes.INT()),
-    DataTypes.FIELD("trip_miles", DataTypes.DOUBLE()),
-    DataTypes.FIELD("trip_time", DataTypes.DOUBLE()),
-    DataTypes.FIELD("base_passenger_fare", DataTypes.DOUBLE()),
-    DataTypes.FIELD("tolls", DataTypes.DOUBLE()),
-    DataTypes.FIELD("bcf", DataTypes.DOUBLE()),
-    DataTypes.FIELD("sales_tax", DataTypes.DOUBLE()),
-    DataTypes.FIELD("congestion_surcharge", DataTypes.DOUBLE()),
-    DataTypes.FIELD("airport_fee", DataTypes.DOUBLE()),
-    DataTypes.FIELD("tips", DataTypes.DOUBLE()),
-    DataTypes.FIELD("driver_pay", DataTypes.DOUBLE()),
-    DataTypes.FIELD("shared_request_flag", DataTypes.STRING()),
-    DataTypes.FIELD("shared_match_flag", DataTypes.STRING()),
-    DataTypes.FIELD("access_a_ride_flag", DataTypes.STRING()),
-    DataTypes.FIELD("wav_request_flag", DataTypes.STRING()),
-    DataTypes.FIELD("wav_match_flag", DataTypes.STRING()),
-    DataTypes.FIELD("cbd_congestion_fee", DataTypes.DOUBLE()),
-])
-
-"""
-(
-  `id` STRING,
-  `hvfhs_license_num` STRING,
-  `dispatching_base_num` STRING,
-  `originating_base_num` STRING,
-  `pulocationid` INT,
-  `dolocationid` INT,
-  `trip_miles` FLOAT,
-  `trip_duration_seconds` INT,
-  `fare_amount` FLOAT,
-  `tolls` FLOAT,
-  `bcf` FLOAT,
-  `sales_tax` FLOAT,
-  `congestion_surcharge` FLOAT,
-  `airport_fee` FLOAT,
-  `tips` FLOAT,
-  `driver_pay` FLOAT,
-  `cbd_congestion_fee` FLOAT,
-  `request_datetime` TIMESTAMP(3),
-  `on_scene_datetime` TIMESTAMP(3),
-  `pickup_datetime` TIMESTAMP(3),
-  `dropoff_datetime` TIMESTAMP(3),
-  `shared_request_flag` BOOLEAN,
-  `shared_match_flag` BOOLEAN,
-  `access_a_ride_flag` BOOLEAN,
-  `wav_request_flag` BOOLEAN,
-  `wav_match_flag` BOOLEAN
-)
-"""
-
-PREPROCESSED_FHVHV_TAXI_SCHEMA = DataTypes.ROW([
-    DataTypes.FIELD("id", DataTypes.STRING()),
-    DataTypes.FIELD("hvfhs_license_num", DataTypes.STRING()),
-    DataTypes.FIELD("dispatching_base_num", DataTypes.STRING()),
-    DataTypes.FIELD("originating_base_num", DataTypes.STRING()),
-    DataTypes.FIELD('pulocationid', DataTypes.INT()),
-    DataTypes.FIELD('dolocationid', DataTypes.INT()),
-    DataTypes.FIELD('trip_miles', DataTypes.FLOAT()),
-    DataTypes.FIELD('trip_duration_seconds', DataTypes.INT()),
-    DataTypes.FIELD('fare_amount', DataTypes.INT()),
-    DataTypes.FIELD('tolls', DataTypes.FLOAT()),
-    DataTypes.FIELD('bcf', DataTypes.FLOAT()),
-    DataTypes.FIELD('sales_tax', DataTypes.FLOAT()),
-    DataTypes.FIELD('congestion_surcharge', DataTypes.FLOAT()),
-    DataTypes.FIELD('airport_fee', DataTypes.FLOAT()),
-    DataTypes.FIELD('tips', DataTypes.FLOAT()),
-    DataTypes.FIELD('driver_pay', DataTypes.FLOAT()),
-    DataTypes.FIELD('cbd_congestion_fee', DataTypes.FLOAT()),
-    DataTypes.FIELD('request_datetime', DataTypes.TIMESTAMP(3)),
-    DataTypes.FIELD('on_scene_datetime', DataTypes.TIMESTAMP(3)),
-    DataTypes.FIELD('pickup_datetime', DataTypes.TIMESTAMP(3)),
-    DataTypes.FIELD('dropoff_datetime', DataTypes.TIMESTAMP(3)),
-    DataTypes.FIELD('shared_request_flag', DataTypes.BOOLEAN()),
-    DataTypes.FIELD('shared_match_flag', DataTypes.BOOLEAN()),
-    DataTypes.FIELD('access_a_ride_flag', DataTypes.BOOLEAN()),
-    DataTypes.FIELD('wav_request_flag', DataTypes.BOOLEAN()),
-    DataTypes.FIELD('wav_match_flag', DataTypes.BOOLEAN())
-])
-
-PREPROCESSED_GREEN_TAXI_SCHEMA = DataTypes.ROW([
-    DataTypes.FIELD("id", DataTypes.STRING()),
-    DataTypes.FIELD("vendorid", DataTypes.INT()),
-    DataTypes.FIELD("passenger_count", DataTypes.INT()),
-    DataTypes.FIELD("trip_miles", DataTypes.FLOAT()),
-    DataTypes.FIELD("ratecodeid", DataTypes.INT()),
-    DataTypes.FIELD("pulocationid", DataTypes.INT()),
-    DataTypes.FIELD("dolocationid", DataTypes.INT()),
-    DataTypes.FIELD("fare_amount", DataTypes.FLOAT()),
-    DataTypes.FIELD("extra", DataTypes.FLOAT()),
-    DataTypes.FIELD("mta_tax", DataTypes.FLOAT()),
-    DataTypes.FIELD("tip_amount", DataTypes.FLOAT()),
-    DataTypes.FIELD("tolls_amount", DataTypes.FLOAT()),
-    DataTypes.FIELD("improvement_surcharge", DataTypes.FLOAT()),
-    DataTypes.FIELD("total_amount", DataTypes.FLOAT()),
-    DataTypes.FIELD("congestion_surcharge", DataTypes.FLOAT()),
-    DataTypes.FIELD("cbd_congestion_fee", DataTypes.FLOAT()),
-    DataTypes.FIELD("pickup_datetime", DataTypes.TIMESTAMP(3)),
-    DataTypes.FIELD("dropoff_datetime", DataTypes.TIMESTAMP(3)),
-    DataTypes.FIELD("store_and_fwd_flag", DataTypes.BOOLEAN()),
-    DataTypes.FIELD("trip_type", DataTypes.VARCHAR(11)),
-    DataTypes.FIELD("payment_type", DataTypes.STRING()),
-    DataTypes.FIELD("airport_fee", DataTypes.DOUBLE()),
-    DataTypes.FIELD("taxi_type", DataTypes.CHAR(10)),
-    DataTypes.FIELD("trip_duration", DataTypes.INT())
-])
-
-PREPROCESSED_YELLOW_TAXI_SCHEMA = DataTypes.ROW([
-    DataTypes.FIELD("id", DataTypes.STRING()),
-    DataTypes.FIELD("vendorid", DataTypes.INT()),
-    DataTypes.FIELD("passenger_count", DataTypes.INT()),
-    DataTypes.FIELD("trip_miles", DataTypes.FLOAT()),
-    DataTypes.FIELD("ratecodeid", DataTypes.INT()),
-    DataTypes.FIELD("pulocationid", DataTypes.INT()),
-    DataTypes.FIELD("dolocationid", DataTypes.INT()),
-    DataTypes.FIELD("fare_amount", DataTypes.FLOAT()),
-    DataTypes.FIELD("extra", DataTypes.FLOAT()),
-    DataTypes.FIELD("mta_tax", DataTypes.FLOAT()),
-    DataTypes.FIELD("tip_amount", DataTypes.FLOAT()),
-    DataTypes.FIELD("tolls_amount", DataTypes.FLOAT()),
-    DataTypes.FIELD("improvement_surcharge", DataTypes.FLOAT()),
-    DataTypes.FIELD("total_amount", DataTypes.FLOAT()),
-    DataTypes.FIELD("congestion_surcharge", DataTypes.FLOAT()),
-    DataTypes.FIELD("cbd_congestion_fee", DataTypes.FLOAT()),
-    DataTypes.FIELD("pickup_datetime", DataTypes.TIMESTAMP(3)),
-    DataTypes.FIELD("dropoff_datetime", DataTypes.TIMESTAMP(3)),
-    DataTypes.FIELD("store_and_fwd_flag", DataTypes.BOOLEAN()),
-    DataTypes.FIELD("payment_type", DataTypes.STRING()),
-    DataTypes.FIELD("airport_fee", DataTypes.DOUBLE()),
-    DataTypes.FIELD("taxi_type", DataTypes.CHAR(11)),
-    DataTypes.FIELD("trip_type", DataTypes.CHAR(11)),
-    DataTypes.FIELD("trip_duration", DataTypes.INT())
-])
-
-
-PREPROCESSED_GREEN_TAXI_TABLE_WITH_KAFKA_CONNECTOR = """
+PREPROCESSED_TRADITIONAL_TAXI_TABLE_WITH_KAFKA_CONNECTOR = """
 CREATE TABLE {} (
     id STRING,
     vendorid INT,
@@ -174,11 +29,50 @@ CREATE TABLE {} (
     'topic' = '{}',
     'properties.bootstrap.servers' = '{}',
     'format' = 'json',
-    'sink.transactional-id-prefix' = 'green_taxi'
+    'sink.transactional-id-prefix' = 'traditional_taxi'
 )
 """
 
-PREPROCESSED_YELLOW_TAXI_TABLE_WITH_KAFKA_CONNECTOR = """
+# STREAM_PREPROCESSED_TRADITIONAL_TAXI_TABLE_WITH_KAFKA_CONNECTOR = """
+# CREATE TABLE {} (
+#     id STRING,
+#     vendorid INT,
+#     passenger_count INT,
+#     trip_miles FLOAT,
+#     ratecodeid INT,
+#     pulocationid INT,
+#     dolocationid INT,
+#     fare_amount FLOAT,
+#     extra FLOAT,
+#     mta_tax FLOAT,
+#     tip_amount FLOAT,
+#     tolls_amount FLOAT,
+#     improvement_surcharge FLOAT,
+#     total_amount FLOAT,
+#     congestion_surcharge FLOAT,
+#     cbd_congestion_fee FLOAT,
+#     pickup_datetime TIMESTAMP(0) NOT NULL,
+#     dropoff_datetime TIMESTAMP(0) NOT NULL,
+#     store_and_fwd_flag BOOLEAN,
+#     trip_type STRING,
+#     payment_type STRING,
+#     airport_fee DOUBLE,
+#     taxi_type STRING,
+#     trip_duration INT,
+#     proctime AS PROCTIME(),
+#     WATERMARK FOR pickup_datetime AS pickup_datetime - INTERVAL '5' SECOND
+# ) WITH (
+#     'connector' = 'kafka',
+#     'topic' = '{}',
+#     'properties.bootstrap.servers' = '{}',
+#     'properties.group.id' = 'preprocess-consumer-group',
+#     'scan.startup.mode' = 'latest-offset',
+#     'format' = 'json',
+#     'scan.watermark.idle-timeout'='5second'
+# )
+# """
+
+STREAM_PREPROCESSED_TRADITIONAL_TAXI_TABLE_WITH_KAFKA_CONNECTOR = """
 CREATE TABLE {} (
     id STRING,
     vendorid INT,
@@ -193,27 +87,31 @@ CREATE TABLE {} (
     tip_amount FLOAT,
     tolls_amount FLOAT,
     improvement_surcharge FLOAT,
-    total_amount DOUBLE,
+    total_amount FLOAT,
     congestion_surcharge FLOAT,
     cbd_congestion_fee FLOAT,
-    pickup_datetime TIMESTAMP(3),
-    dropoff_datetime TIMESTAMP(3),
+    pickup_datetime TIMESTAMP(0),
+    dropoff_datetime TIMESTAMP(0),
     store_and_fwd_flag BOOLEAN,
+    trip_type STRING,
     payment_type STRING,
     airport_fee DOUBLE,
     taxi_type STRING,
-    trip_type STRING,
-    trip_duration INT
+    trip_duration INT,
+    WATERMARK FOR pickup_datetime AS pickup_datetime - INTERVAL '1' SECOND
 ) WITH (
     'connector' = 'kafka',
     'topic' = '{}',
     'properties.bootstrap.servers' = '{}',
+    'properties.group.id' = 'preprocess-consumer-group',
+    'scan.startup.mode' = 'latest-offset',
     'format' = 'json',
-    'sink.transactional-id-prefix' = 'yellow_taxi'
+    'scan.watermark.idle-timeout'='5second'
 )
 """
 
-PREPROCESSED_FHVHV_TABLE_WITH_KAFKA_CONNECTOR = """
+
+STREAM_PREPROCESSED_FHVHV_TABLE_WITH_KAFKA_CONNECTOR = """
 CREATE TABLE {} (
     id STRING,
     hvfhs_license_num STRING,
@@ -240,12 +138,14 @@ CREATE TABLE {} (
     shared_match_flag BOOLEAN,
     access_a_ride_flag BOOLEAN,
     wav_request_flag BOOLEAN,
-    wav_match_flag BOOLEAN
+    wav_match_flag BOOLEAN,
+    WATERMARK FOR pickup_datetime AS pickup_datetime - INTERVAL '5' SECOND
 ) WITH (
     'connector' = 'kafka',
     'topic' = '{}',
     'properties.bootstrap.servers' = '{}',
-    'format' = 'json',
-    'sink.transactional-id-prefix' = 'fore_hire_vehicle'
+    'properties.group.id' = 'preprocess-consumer-group',
+    'scan.startup.mode' = 'latest-offset',
+    'format' = 'json'
 )
 """

@@ -38,7 +38,7 @@ async def consume_and_produce(topic: str, input_file: str):
             except Exception as e:
                 logger.error(f"Error processing message: {e}", exc_info=True)
 
-            await asyncio.sleep(2)
+            await asyncio.sleep(0.5)
 
     except KeyboardInterrupt:
         logger.info("Shutting down consumer...")

@@ -5,10 +5,10 @@ from streaming.parser import (
 from streaming.preprocess import (
     fhvhv_preprocess, green_taxi_preprocess, yellow_taxi_preprocess
 )
+from pyflink.table.expressions import col
 import os
 from schemas.stream.tables import (
-    PREPROCESSED_GREEN_TAXI_TABLE_WITH_KAFKA_CONNECTOR,
-    PREPROCESSED_YELLOW_TAXI_TABLE_WITH_KAFKA_CONNECTOR,
+    PREPROCESSED_TRADITIONAL_TAXI_TABLE_WITH_KAFKA_CONNECTOR,
     PREPROCESSED_FHVHV_TABLE_WITH_KAFKA_CONNECTOR
 )
 
@@ -39,22 +39,22 @@ def main():
     green_taxi_table = green_taxi_preprocess(green_taxi_table)
     yellow_taxi_table = yellow_taxi_preprocess(yellow_taxi_table)
 
-    green_taxi_table.execute()
-    yellow_taxi_table.execute()
-    fhvhv_table.execute()
+    # Union green and yellow taxi
+    yellow_taxi_table = yellow_taxi_table.select(
+        *[col(c) for c in green_taxi_table.get_schema().get_field_names()])
+    traditional_taxi_table = green_taxi_table.union_all(yellow_taxi_table)
 
 
-    print("Executing FHVHV table creation")
+    # green_taxi_table.execute()
+    # yellow_taxi_table.execute()
+    # fhvhv_table.execute()
+
+
+    # print("Executing FHVHV table creation")
 
     t_env.execute_sql(
-        PREPROCESSED_GREEN_TAXI_TABLE_WITH_KAFKA_CONNECTOR.format(
-            'preprocessed_green_taxi', 'preprocess.public.green_taxi', 'localhost:9092'
-        )
-    )
-
-    t_env.execute_sql(
-        PREPROCESSED_YELLOW_TAXI_TABLE_WITH_KAFKA_CONNECTOR.format(
-            'preprocessed_yellow_taxi', 'preprocess.public.yellow_taxi', 'localhost:9092'
+        PREPROCESSED_TRADITIONAL_TAXI_TABLE_WITH_KAFKA_CONNECTOR.format(
+            'preprocessed_traditional_taxi', 'preprocess.public.traditional_taxi', 'localhost:9092'
         )
     )
 
@@ -64,18 +64,11 @@ def main():
         )
     )
 
+    # print("Inserting data into sink tables...")
     statement_set: StatementSet = t_env.create_statement_set()
-
-    print("Inserting data into sink tables...")
-    statement_set.add_insert("preprocessed_green_taxi", green_taxi_table)
-    statement_set.add_insert("preprocessed_yellow_taxi", yellow_taxi_table)
+    statement_set.add_insert("preprocessed_traditional_taxi", traditional_taxi_table)
     statement_set.add_insert("preprocessed_fhvhv", fhvhv_table)
     statement_set.execute().wait()
-
-    # green_taxi_table.execute_insert("preprocessed_green_taxi").wait()
-    # yellow_taxi_table.execute_insert("preprocessed_yellow_taxi").wait()
-    # fhvhv_table.execute_insert("preprocessed_fhvhv").wait()
-
 
     return
 

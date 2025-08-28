@@ -17,3 +17,11 @@ python3 -m local.generator.datasource1_generator
 python3 -m local.generator.datasource2_generator
 python3 -m local.generator.datasource3_generator
 python3 -m local.generator.kafka_generator
+
+## 3. Stateless Operator
+python3 -m streaming.main
+
+## Debug
+docker compose -f docker-compose.stream.yml up -d
+python3 -m local.generator.kafka_preprocess_generator
+python3 -m streaming.stateful_main
