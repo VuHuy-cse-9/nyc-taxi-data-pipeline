@@ -3,10 +3,10 @@ import os
 from dotenv import load_dotenv
 from pyspark.sql import SparkSession, DataFrame
 import pyspark.sql.functions as F
-from preprocess.datasource.green_taxi_preprocess import preprocess as green_taxi_preprocess
-from preprocess.datasource.yellow_taxi_preprocess import preprocess as yellow_taxi_preprocess
-from preprocess.datasource.fhvhv_preprocess import preprocess as fhvhv_preprocess
-from preprocess.datasource.taxi_zone_preprocess import preprocess as taxi_zone_preprocess
+from batch_processing.datasource.green_taxi_preprocess import preprocess as green_taxi_preprocess
+from batch_processing.datasource.yellow_taxi_preprocess import preprocess as yellow_taxi_preprocess
+from batch_processing.datasource.fhvhv_preprocess import preprocess as fhvhv_preprocess
+from batch_processing.datasource.taxi_zone_preprocess import preprocess as taxi_zone_preprocess
 
 load_dotenv()
 
@@ -186,10 +186,8 @@ def preprocess(dataset2df: dict[str, DataFrame]):
 def main():
     # Create Spark session
     spark = create_spark_session()
-    # spark = create_spark_local_session()
 
     # Ingest data from local files
-    # dataset2df = ingest_local_data(spark)
     dataset2df = ingest_data(spark)
 
     # Preprocess datas

@@ -1,7 +1,7 @@
 from pyspark.sql import DataFrame
 import pyspark.sql.functions as F
 from schemas.models import TripType, TaxiType
-from preprocess.datasource.common import (
+from batch_processing.datasource.common import (
     transform_ts_to_asia_timezone, ensure_boolean_type, process_payment_type)
 
 def process_trip_type(column_name: str):

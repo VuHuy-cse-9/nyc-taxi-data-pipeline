@@ -13,10 +13,10 @@ YELLOW_TAXI_DIR = os.path.join(DATA_DIR, "yellow_taxi")
 METADATA_DIR = os.path.join(DATA_DIR, "metadata")
 
 LOCAL2MINIO_DIR = {
-    FHVHV_DIR: "nyc_taxi_dataset/for_hire_vehicle",
-    GREEN_TAXI_DIR: "nyc_taxi_dataset/green_taxi",
+    # FHVHV_DIR: "nyc_taxi_dataset/for_hire_vehicle",
+    # GREEN_TAXI_DIR: "nyc_taxi_dataset/green_taxi",
     YELLOW_TAXI_DIR: "nyc_taxi_dataset/yellow_taxi",
-    METADATA_DIR: "nyc_taxi_dataset/metadata"
+    # METADATA_DIR: "nyc_taxi_dataset/metadata"
 }
 
 

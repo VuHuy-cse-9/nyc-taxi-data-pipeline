@@ -1,3 +1,0 @@
-from streaming.parser.fhvhv_parsing import parse_data as fhvhv_parse_data
-from streaming.parser.green_taxi_parsing import parse_data as green_taxi_parse_data
-from streaming.parser.yellow_taxi_parsing import parse_data as yellow_taxi_parse_data

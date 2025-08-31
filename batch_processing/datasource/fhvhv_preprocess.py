@@ -1,6 +1,6 @@
 from pyspark.sql import DataFrame
 import pyspark.sql.functions as F
-from preprocess.datasource.yellow_taxi_preprocess import (
+from batch_processing.datasource.yellow_taxi_preprocess import (
     transform_ts_to_asia_timezone,
     ensure_boolean_type
 )

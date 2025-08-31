@@ -1,0 +1,13 @@
+{
+    "name": "online-feature-sink",
+    "config": {
+        "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+        "tasks.max": "1",
+        "topics": "online-feature",
+        "connection.url": "jdbc:postgresql://localhost:5432/datamart",
+        "connection.user": "datamart_user",
+        "connection.password": "datamart_password",
+        "auto.create": true,
+        "consumer.auto.offset.reset": "latest"
+    }
+}

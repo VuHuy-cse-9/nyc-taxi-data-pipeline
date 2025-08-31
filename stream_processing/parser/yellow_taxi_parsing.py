@@ -35,14 +35,18 @@ CREATE TABLE raw_yellow_taxi (
             airport_fee FLOAT,
             cbd_congestion_fee FLOAT
         )
-    )
+    ),
+    pickup_datetime AS TO_TIMESTAMP(payload.after.tpep_pickup_datetime),
+    dropoff_datetime AS TO_TIMESTAMP(payload.after.tpep_dropoff_datetime),
+    WATERMARK FOR pickup_datetime AS pickup_datetime - INTERVAL '1' SECOND
 ) WITH (
     'connector' = 'kafka',
     'topic' = 'raw.public.yellow_taxi',
     'properties.bootstrap.servers' = 'localhost:9092',
     'properties.group.id' = 'parser-consumer-2-group',
     'scan.startup.mode' = 'latest-offset',
-    'format' = 'json'
+    'format' = 'json',
+    'scan.watermark.idle-timeout'='5second'
 )
 """
 
@@ -56,8 +60,8 @@ def parse_data(t_env: TableEnvironment) -> Table:
     table = table.select(
         col('payload').get('after').get('id').alias('id'),
         col('payload').get('after').get('vendorid').alias('vendorid'),
-        col('payload').get('after').get('tpep_pickup_datetime').alias('tpep_pickup_datetime'),
-        col('payload').get('after').get('tpep_dropoff_datetime').alias('tpep_dropoff_datetime'),
+        # col('payload').get('after').get('tpep_pickup_datetime').alias('tpep_pickup_datetime'),
+        # col('payload').get('after').get('tpep_dropoff_datetime').alias('tpep_dropoff_datetime'),
         col('payload').get('after').get('passenger_count').alias('passenger_count'),
         col('payload').get('after').get('trip_distance').alias('trip_distance'),
         col('payload').get('after').get('ratecodeid').alias('ratecodeid'),
@@ -74,7 +78,9 @@ def parse_data(t_env: TableEnvironment) -> Table:
         col('payload').get('after').get('total_amount').alias('total_amount'),
         col('payload').get('after').get('congestion_surcharge').alias('congestion_surcharge'),
         col('payload').get('after').get('cbd_congestion_fee').alias('cbd_congestion_fee'),
-        col('payload').get('after').get('airport_fee').alias('airport_fee')
+        col('payload').get('after').get('airport_fee').alias('airport_fee'),
+        col('pickup_datetime'),
+        col('dropoff_datetime')
     )
 
     return table

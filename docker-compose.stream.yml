@@ -236,6 +236,21 @@ services:
   #     retries: 5
 
 
+  datamart_db:
+    container_name: datamart_db
+    image: postgres:latest
+    ports:
+      - '5434:5432' # Access via Thrift protocol
+    environment:
+      POSTGRES_USER: '${DATAMART_USER}'
+      POSTGRES_PASSWORD: '${DATAMART_PASSWORD}'
+      POSTGRES_DB: "${DATAMART_DB}"
+    networks:
+      - stream_nyc_network
+    volumes:
+      - ./local/volumes/datamart_db:/var/lib/postgresql/data
+
+
 networks:
   stream_nyc_network:
     driver: bridge

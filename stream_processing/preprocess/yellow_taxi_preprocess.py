@@ -2,7 +2,7 @@ import os
 from pyflink.table import EnvironmentSettings, TableEnvironment, DataTypes, Table
 from pyflink.table.expressions import col, lit, TimePointUnit, to_timestamp, Expression, if_then_else, timestamp_diff, coalesce
 from pyflink.table.udf import udf
-from streaming.preprocess.common import (
+from stream_processing.preprocess.common import (
     ensure_boolean_type, process_payment_type
 )
 import pandas as pd
@@ -54,16 +54,12 @@ def estimate_total_amount(fare_amount: Expression,
 
 def preprocess(table: Table):
     return table.add_columns(
-        to_timestamp(col("tpep_pickup_datetime")).alias("pickup_datetime"),
-        to_timestamp(col("tpep_dropoff_datetime")).alias("dropoff_datetime"),
         ensure_boolean_type(col("store_and_fwd_flag"), "Y").alias("p_store_and_fwd_flag"),
         process_payment_type(col("payment_type")).alias("p_payment_type"),
         process_airport_fee(col("airport_fee")).alias("p_airport_fee"),
         lit(TaxiType.YELLOW.value).alias("taxi_type"),
         lit(TripType.STREET_HAIL.value).alias("trip_type"),
     ).drop_columns(
-        col("tpep_pickup_datetime"),
-        col("tpep_dropoff_datetime"),
         col("payment_type"),
         col("store_and_fwd_flag"),
         col("airport_fee")

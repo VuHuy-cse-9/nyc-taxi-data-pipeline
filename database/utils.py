@@ -33,14 +33,22 @@ def create_bucket_if_not_exists(minio_client, bucket_name):
         print(f"Error creating bucket '{bucket_name}': {e}")
         raise Exception(f"Failed to create bucket: {str(e)}")
 
-def upload_file_to_minio(minio_client, bucket_name, file_path, object_name):
+def upload_file_to_minio(minio_client: Minio, bucket_name, file_path, object_name):
     try:
-        minio_client.fput_object(
-                bucket_name=bucket_name,
-                object_name=object_name,
-                file_path=file_path
-            )
-        print(f"File '{file_path}' uploaded to bucket '{bucket_name}' as '{object_name}'.")
+        # This will fetch metadata without downloading the object
+        try:
+            response = minio_client.stat_object(bucket_name, object_name)
+        except S3Error as e:
+            if e.code == "NoSuchKey":
+                minio_client.fput_object(
+                        bucket_name=bucket_name,
+                        object_name=object_name,
+                        file_path=file_path
+                    )
+            
+                print(f"File '{file_path}' uploaded to bucket '{bucket_name}' as '{object_name}'.")
+            else:
+                raise e
     except S3Error as e:
         print(f"Error uploading file '{file_path}' to bucket '{bucket_name}': {e}")
         raise Exception(f"Failed to upload file: {str(e)}")

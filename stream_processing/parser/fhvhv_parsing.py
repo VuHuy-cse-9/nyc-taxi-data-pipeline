@@ -39,14 +39,20 @@ CREATE TABLE raw_for_hire_vehicle (
             wav_match_flag STRING,
             cbd_congestion_fee FLOAT
         )
-    )
+    ),
+    pickup_datetime AS TO_TIMESTAMP(payload.after.pickup_datetime),
+    dropoff_datetime AS TO_TIMESTAMP(payload.after.dropoff_datetime),
+    request_datetime AS TO_TIMESTAMP(payload.after.request_datetime),
+    on_scene_datetime AS TO_TIMESTAMP(payload.after.on_scene_datetime),
+    WATERMARK FOR pickup_datetime AS pickup_datetime - INTERVAL '1' SECOND
 ) WITH (
     'connector' = 'kafka',
     'topic' = 'raw.public.for_hire_vehicle',
     'properties.bootstrap.servers' = 'localhost:9092',
     'properties.group.id' = 'parser-consumer-2-group',
     'scan.startup.mode' = 'latest-offset',
-    'format' = 'json'
+    'format' = 'json',
+    'scan.watermark.idle-timeout'='5second'
 )
 """
 
@@ -62,10 +68,6 @@ def parse_data(t_env: TableEnvironment) -> Table:
         col('payload').get('after').get('hvfhs_license_num').alias('hvfhs_license_num'),
         col('payload').get('after').get('dispatching_base_num').alias('dispatching_base_num'),
         col('payload').get('after').get('originating_base_num').alias('originating_base_num'),
-        col('payload').get('after').get('request_datetime').alias('request_datetime'),
-        col('payload').get('after').get('on_scene_datetime').alias('on_scene_datetime'),
-        col('payload').get('after').get('pickup_datetime').alias('pickup_datetime'),
-        col('payload').get('after').get('dropoff_datetime').alias('dropoff_datetime'),
         col('payload').get('after').get('pulocationid').alias('pulocationid'),
         col('payload').get('after').get('dolocationid').alias('dolocationid'),
         col('payload').get('after').get('trip_miles').alias('trip_miles'),
@@ -83,7 +85,10 @@ def parse_data(t_env: TableEnvironment) -> Table:
         col('payload').get('after').get('access_a_ride_flag').alias('access_a_ride_flag'),
         col('payload').get('after').get('wav_request_flag').alias('wav_request_flag'),
         col('payload').get('after').get('wav_match_flag').alias('wav_match_flag'),
-        col('payload').get('after').get('cbd_congestion_fee').alias('cbd_congestion_fee')
+        col('payload').get('after').get('cbd_congestion_fee').alias('cbd_congestion_fee'),
+        col('pickup_datetime'),
+        col('dropoff_datetime')
+
     )
     return table
 

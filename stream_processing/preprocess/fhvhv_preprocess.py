@@ -1,11 +1,12 @@
 import os
 from pyflink.table import EnvironmentSettings, TableEnvironment, DataTypes, Table, TableDescriptor, Schema
-from pyflink.table.expressions import col, to_timestamp
-from streaming.preprocess.common import (
+from pyflink.table.expressions import col, to_timestamp, lit
+from stream_processing.preprocess.common import (
     ensure_boolean_type,
 )
 import pandas as pd
 import logging
+from schemas.models import TaxiType
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -13,34 +14,22 @@ logger = logging.getLogger(__name__)
 JARS_PATH = f"{os.getcwd()}/jars"
 
 def preprocess(table: Table):
-    datetime_format = "%Y-%m-%dT%H:%M:%S.%f"
     return table.add_columns(
-        to_timestamp(col("request_datetime"), datetime_format).alias("p_request_datetime"),
-        to_timestamp(col("on_scene_datetime"), datetime_format).alias("p_on_scene_datetime"),
-        to_timestamp(col("pickup_datetime"), datetime_format).alias("p_pickup_datetime"),
-        to_timestamp(col("dropoff_datetime"), datetime_format).alias("p_dropoff_datetime"),
         ensure_boolean_type(col("shared_request_flag"), "Y").alias("p_shared_request_flag"),
         ensure_boolean_type(col("shared_match_flag"), "Y").alias("p_shared_match_flag"),
         ensure_boolean_type(col("access_a_ride_flag"), "Y").alias("p_access_a_ride_flag"),
         ensure_boolean_type(col("wav_request_flag"), "Y").alias("p_wav_request_flag"),
         ensure_boolean_type(col("wav_match_flag"), "Y").alias("p_wav_match_flag"),
+        lit(TaxiType.FHVH.value).alias("taxi_type")
     ).drop_columns(
-        col("request_datetime"),
-        col("on_scene_datetime"),
-        col("pickup_datetime"),
-        col("dropoff_datetime"),
         col("shared_request_flag"),
         col("shared_match_flag"),
         col("access_a_ride_flag"),
         col("wav_request_flag"),
         col("wav_match_flag"),
     ).rename_columns(
-        col("trip_time").alias("trip_duration_seconds"),
+        col("trip_time").alias("trip_duration"),
         col("base_passenger_fare").alias("fare_amount"),
-        col("p_request_datetime").alias("request_datetime"),
-        col("p_on_scene_datetime").alias("on_scene_datetime"),
-        col("p_pickup_datetime").alias("pickup_datetime"),
-        col("p_dropoff_datetime").alias("dropoff_datetime"),
         col("p_shared_request_flag").alias("shared_request_flag"),
         col("p_shared_match_flag").alias("shared_match_flag"),
         col("p_access_a_ride_flag").alias("access_a_ride_flag"),

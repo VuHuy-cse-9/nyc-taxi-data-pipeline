@@ -42,8 +42,6 @@ sample = {
   "trip_duration": 1735
 }
 
-
-
 async def consume_and_produce(topic: str):
     try:
         # Create consumer and producer
@@ -57,22 +55,22 @@ async def consume_and_produce(topic: str):
         print(f"Sample data loaded: {sample}")
        
         i = 0
-        delay = 5
+        delay = 0.1
         current_date = datetime.now()
         while True:
             i += 1
             sample_data = deepcopy(sample)
             
-            if (i % 2 == 0) and (i != 0):
-                pickup_datetime = current_date + timedelta(seconds=i + 6) # >= Window End
-                dropoff_datetime = current_date + timedelta(seconds=i+1800)
-            else:
-                pickup_datetime = current_date + timedelta(seconds=i)
-                dropoff_datetime = current_date + timedelta(seconds=i+1800)
+            # if (i % 2 == 0) and (i != 0):
+            #     pickup_datetime = current_date + timedelta(seconds=i + 6) # >= Window End
+            #     dropoff_datetime = current_date + timedelta(seconds=i+1800)
+            # else:
+            pickup_datetime = current_date + timedelta(seconds=i)
+            dropoff_datetime = current_date + timedelta(seconds=i+1800)
 
             # Out of order record
-            sample_data['pickup_datetime'] = dropoff_datetime.strftime("%Y-%m-%d %H:%M:%S")
-            sample_data['dropoff_datetime'] = pickup_datetime.strftime("%Y-%m-%d %H:%M:%S")
+            sample_data['pickup_datetime'] = pickup_datetime.strftime("%Y-%m-%d %H:%M:%S")
+            sample_data['dropoff_datetime'] = dropoff_datetime.strftime("%Y-%m-%d %H:%M:%S")
             
             try:
                 # Produce to output topic
