@@ -236,6 +236,40 @@ services:
   #     retries: 5
 
 
+  datasource3:
+    image: mongodb/mongodb-community-server:latest
+    container_name: datasource3
+    ports:
+      - 27017:27017
+    command: >
+      mongod
+        --replSet rs0
+        --bind_ip_all
+        --port 27017
+    volumes:
+      - ./local/volumes/mongodb:/data/db
+      - ./local/mongodb/init-replica-set.js:/scripts/init-replica-set.js
+    healthcheck:
+      test: echo 'rs.initiated = rs.status().hasOwnProperty("set") && rs.status().members.length > 0; rs.initiated' | mongo --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    networks:
+      - stream_nyc_network
+
+
+  datasource3-ui:
+    image: mongo-express
+    container_name: mongo-express
+    ports:
+      - "8082:8081"
+    environment:
+      ME_CONFIG_MONGODB_SERVER: datasource3
+    restart: unless-stopped
+    networks:
+      - stream_nyc_network
+
   datamart_db:
     container_name: datamart_db
     image: postgres:latest

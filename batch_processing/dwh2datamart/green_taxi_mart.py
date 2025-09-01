@@ -81,12 +81,13 @@ def main():
         F.col("passenger_count").isNotNull() & \
         (F.col("passenger_count") > 0) & \
         (F.col("trip_duration_seconds") > 100) & \
-        (F.col("trip_miles") > 0)
+        (F.col("trip_miles") > 0) & \
+        (F.col("fare_amount") > 0)
 
     df.printSchema()
     df = df.filter(
         F.col("pickup_datetime").isNotNull() &\
-        # within_july_condition & \
+        within_july_condition & \
         valid_trip & \
         (F.col("taxi_type") == "green_taxi")
     ).dropDuplicates(

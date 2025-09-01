@@ -1,6 +1,7 @@
 from pyspark.sql import SparkSession, DataFrame
 import os
 from dotenv import load_dotenv
+from datetime import datetime
 import pyspark.sql.functions as F
 
 load_dotenv()
@@ -41,14 +42,14 @@ def create_spark_session() -> SparkSession:
     return spark
 
 def ingest_data(spark: SparkSession):
-    path_read = f"s3a://{WAREHOUSE_BUCKET}/" + "nyc_taxi_dataset/fh_vehicle.parquet"
+    path_read = f"s3a://{WAREHOUSE_BUCKET}/" + "nyc_taxi_dataset/traditional_taxi.parquet"
     df = spark.read.parquet(path_read)
     return df
 
 def sink_data(df: DataFrame):
     df.write.jdbc(
         url="jdbc:postgresql://localhost:5434/{}".format(DATAMART_DB),
-        table="public.fhvh_mart",
+        table="public.yellow_taxi_mart",
         mode="overwrite",
         properties={
             "user": DATAMART_USER,
@@ -77,6 +78,8 @@ def main():
         (F.month("pickup_datetime") == F.lit(MONTH))
     
     valid_trip = \
+        F.col("passenger_count").isNotNull() & \
+        (F.col("passenger_count") > 0) & \
         (F.col("trip_duration_seconds") > 100) & \
         (F.col("trip_miles") > 0) & \
         (F.col("fare_amount") > 0)
@@ -85,15 +88,15 @@ def main():
     df = df.filter(
         F.col("pickup_datetime").isNotNull() &\
         within_july_condition & \
-        valid_trip
+        valid_trip & \
+        (F.col("taxi_type") == "yellow_taxi")
     ).dropDuplicates(
-        ["pickup_datetime", "dropoff_datetime",
+        ["pickup_datetime", "dropoff_datetime", 
          "trip_miles", "pulocationid", "dolocationid"]
     ).select(
-        "request_datetime", "on_scene_datetime",
         "pickup_datetime", "dropoff_datetime", 
         "trip_miles", "pulocationid", "dolocationid",
-        "fare_amount"
+        "passenger_count", "fare_amount"
     )
 
     df.printSchema()

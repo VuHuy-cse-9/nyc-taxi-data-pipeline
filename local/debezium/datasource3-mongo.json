@@ -1,0 +1,14 @@
+{
+    "name": "datasource3-mongo",
+    "config": {
+        "connector.class": "io.debezium.connector.mongodb.MongoDbConnector",
+        "connector.displayName": "MongoDB",
+        "topic.prefix": "raw",
+        "collection.include.list": "datasource3.yellow_taxi",
+        "mongodb.connection.string": "mongodb://datasource3:27017/?replicaSet=rs0",
+        "name": "datasource3-mongo",
+        "connector.id": "mongodb",
+        "mongodb.hosts": "datasource3:27017",
+        "database.include.list": "datasource3"
+    }
+}

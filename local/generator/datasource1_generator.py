@@ -112,7 +112,7 @@ async def main():
         await create_table(pool, CREATE_TABLE_QUERY)
 
         # Read green taxi data
-        green_taxi_df = pd.read_csv("dataset/green_taxi/green_taxi_sample.csv")
+        green_taxi_df = pd.read_csv("dataset/samples/csv/green_taxi.csv")
         green_taxi_df = green_taxi_df.sort_values(by="lpep_pickup_datetime").reset_index(drop=True)
         for index, row in green_taxi_df.iterrows():
             record = {
