@@ -3,21 +3,6 @@ services:
   #### MESSAGING SYSTEM ####
   ##########################
 
-  # broker:
-  #   image: quay.io/debezium/kafka:${DEBEZIUM_VERSION}
-  #   ports:
-  #     - 9092:9092
-  #     - 9093:9093
-  #   environment:
-  #     - CLUSTER_ID=oh-sxaDRTcyAr6pFRbXyzA
-  #     - NODE_ID=1
-  #     - NODE_ROLE=combined
-  #     - KAFKA_CONTROLLER_QUORUM_VOTERS=1@broker:9093
-  #     - KAFKA_LISTENERS=PLAINTEXT://broker:9092,CONTROLLER://broker:9093
-  #     - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://broker:9092
-  #   networks:
-  #     - stream_nyc_network
-
   zookeeper:
     image: confluentinc/cp-zookeeper:7.9.2
     container_name: ms-zookeeper
@@ -193,15 +178,15 @@ services:
       CONFIG_STORAGE_TOPIC: connect_configs
       OFFSET_STORAGE_TOPIC: connect_offsets
       # Set to Avro for higher performance
-      # KEY_CONVERTER: io.confluent.connect.avro.AvroConverter
-      # VALUE_CONVERTER: io.confluent.connect.avro.AvroConverter
-      KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
-      VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      KEY_CONVERTER: io.confluent.connect.avro.AvroConverter
+      VALUE_CONVERTER: io.confluent.connect.avro.AvroConverter
       CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
       CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      # KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      # VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
       CONNECT_TOPIC_CREATION_ENABLE: true
     volumes:
-      - ./jars/debezium-connector-cassandra-5:/kafka/connect/debezium-connector-cassandra-5
+      - ./jars/debezium_plugins:/kafka/connect/plugins
     networks:
       - stream_nyc_network
 
@@ -222,39 +207,39 @@ services:
   ############################
   #### THIRD PARTY TOOLS #####
   ############################
-  # datasource1:
-  #   image: postgres:15
-  #   container_name: datasource1
-  #   command: ['postgres', '-c', 'wal_level=logical']
-  #   ports:
-  #     - "10001:5432"
-  #   environment:
-  #     - POSTGRES_DB=default
-  #     - POSTGRES_USER=datasource1
-  #     - POSTGRES_PASSWORD=datasource1
-  #   networks:
-  #     - stream_nyc_network
-
-
-  datasource2:
-    image: debezium/example-cassandra:3.1.3.Final
-    container_name: datasource2
-    build:
-      context: ./local/cassandra
+  datasource1:
+    image: postgres:15
+    container_name: datasource1
+    command: ['postgres', '-c', 'wal_level=logical']
     ports:
-      - 9042:9042
+      - "10001:5432"
+    environment:
+      - POSTGRES_DB=default
+      - POSTGRES_USER=datasource1
+      - POSTGRES_PASSWORD=datasource1
     networks:
       - stream_nyc_network
-    healthcheck:
-      test: ["CMD-SHELL", "cqlsh -e 'DESCRIBE KEYSPACES' 127.0.0.1 9042 || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-    volumes:
-      - cassandra_data:/var/lib/cassandra
-    depends_on:
-      - zookeeper
-      - broker
+
+
+  # datasource2:
+  #   image: debezium/example-cassandra:3.1.3.Final
+  #   container_name: datasource2
+  #   build:
+  #     context: ./local/cassandra
+  #   ports:
+  #     - 9042:9042
+  #   networks:
+  #     - stream_nyc_network
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "cqlsh -e 'DESCRIBE KEYSPACES' 127.0.0.1 9042 || exit 1"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 5
+  #   volumes:
+  #     - cassandra_data:/var/lib/cassandra
+  #   depends_on:
+  #     - zookeeper
+  #     - broker
 
   # datasource3:
   #   image: mongodb/mongodb-community-server:latest
@@ -309,69 +294,61 @@ services:
   ########################
   #### HIVE METASTORE ####
   ########################
-  trino:
-    ports:
-      - "10000:8080"
-    image: "trinodb/trino:476"
-    volumes:
-      - ./local/trino/etc:/usr/lib/trino/etc:ro
-      - ./local/trino/catalog:/etc/trino/catalog
-    depends_on:
-      - hive-metastore
-    networks:
-      - stream_nyc_network
+  # trino:
+  #   ports:
+  #     - "10000:8080"
+  #   image: "trinodb/trino:476"
+  #   volumes:
+  #     - ./local/trino/etc:/usr/lib/trino/etc:ro
+  #     - ./local/trino/catalog:/etc/trino/catalog
+  #   depends_on:
+  #     - hive-metastore
+  #   networks:
+  #     - stream_nyc_network
 
 
-  metastore_db:
-    container_name: hive-metastore-db
-    image: postgres:latest
-    ports:
-      - '5433:5432' # Access via Thrift protocol
-    environment:
-      POSTGRES_USER: '${METADATA_USER}'
-      POSTGRES_PASSWORD: '${METADATA_PASSWORD}'
-      POSTGRES_DB: "${METADATA_DB}"
-    networks:
-      - stream_nyc_network
-    volumes:
-      - ./local/volumes/metastore_db:/var/lib/postgresql/data
+  # metastore_db:
+  #   container_name: hive-metastore-db
+  #   image: postgres:latest
+  #   ports:
+  #     - '5433:5432' # Access via Thrift protocol
+  #   environment:
+  #     POSTGRES_USER: '${METADATA_USER}'
+  #     POSTGRES_PASSWORD: '${METADATA_PASSWORD}'
+  #     POSTGRES_DB: "${METADATA_DB}"
+  #   networks:
+  #     - stream_nyc_network
+  #   volumes:
+  #     - ./local/volumes/metastore_db:/var/lib/postgresql/data
 
-  hive-metastore:
-    container_name: hive-metastore
-    image: 'starburstdata/hive:3.1.3-e.15'
-    ports:
-      - '9083:9083' # Access via Thrift protocol
-    environment:
-      HIVE_METASTORE_DRIVER: org.postgresql.Driver
-      HIVE_METASTORE_JDBC_URL: 'jdbc:postgresql://metastore_db:5432/${METADATA_DB}'
-      HIVE_METASTORE_USER: '${METADATA_USER}'
-      HIVE_METASTORE_PASSWORD: '${METADATA_PASSWORD}'
-      # HIVE_METASTORE_WAREHOUSE_DIR: s3://datalake/ # HDFS config, we don't need it
-      # HIVE_METASTORE_USERS_IN_ADMIN_ROLE: "admin" # We also don't need it
-      # S3_ENDPOINT: http://minio:9000
-      # S3_ACCESS_KEY: "${MINIO_ACCESS_KEY}"
-      # S3_SECRET_KEY: "${MINIO_SECRET_KEY}"
-      # S3_PATH_STYLE_ACCESS: "true"
-      # Below arguments exist for no reasons, but
-      # we can not live without it
-      REGION: ""
-      GOOGLE_CLOUD_KEY_FILE_PATH: ""
-      AZURE_ADL_CLIENT_ID: ""
-      AZURE_ADL_CREDENTIAL: ""
-      AZURE_ADL_REFRESH_URL: ""
-      AZURE_ABFS_STORAGE_ACCOUNT: ""
-      AZURE_ABFS_ACCESS_KEY: ""
-      AZURE_WASB_STORAGE_ACCOUNT: ""
-      AZURE_ABFS_OAUTH: ""
-      AZURE_ABFS_OAUTH_TOKEN_PROVIDER: ""
-      AZURE_ABFS_OAUTH_CLIENT_ID: ""
-      AZURE_ABFS_OAUTH_SECRET: ""
-      AZURE_ABFS_OAUTH_ENDPOINT: ""
-      AZURE_WASB_ACCESS_KEY: ""
-    depends_on:
-      - metastore_db
-    networks:
-      - stream_nyc_network
+  # hive-metastore:
+  #   container_name: hive-metastore
+  #   image: 'starburstdata/hive:3.1.3-e.15'
+  #   ports:
+  #     - '9083:9083' # Access via Thrift protocol
+  #   environment:
+  #     HIVE_METASTORE_DRIVER: org.postgresql.Driver
+  #     HIVE_METASTORE_JDBC_URL: 'jdbc:postgresql://metastore_db:5432/${METADATA_DB}'
+  #     HIVE_METASTORE_USER: '${METADATA_USER}'
+  #     HIVE_METASTORE_PASSWORD: '${METADATA_PASSWORD}'
+  #     REGION: ""
+  #     GOOGLE_CLOUD_KEY_FILE_PATH: ""
+  #     AZURE_ADL_CLIENT_ID: ""
+  #     AZURE_ADL_CREDENTIAL: ""
+  #     AZURE_ADL_REFRESH_URL: ""
+  #     AZURE_ABFS_STORAGE_ACCOUNT: ""
+  #     AZURE_ABFS_ACCESS_KEY: ""
+  #     AZURE_WASB_STORAGE_ACCOUNT: ""
+  #     AZURE_ABFS_OAUTH: ""
+  #     AZURE_ABFS_OAUTH_TOKEN_PROVIDER: ""
+  #     AZURE_ABFS_OAUTH_CLIENT_ID: ""
+  #     AZURE_ABFS_OAUTH_SECRET: ""
+  #     AZURE_ABFS_OAUTH_ENDPOINT: ""
+  #     AZURE_WASB_ACCESS_KEY: ""
+  #   depends_on:
+  #     - metastore_db
+  #   networks:
+  #     - stream_nyc_network
 
 
 networks:
