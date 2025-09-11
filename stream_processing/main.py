@@ -29,7 +29,7 @@ def compute_window_count(table: Table,
         raise ValueError("group_colnames must not be empty")
     # Define Window
     slide_window = \
-            Slide.over(lit(window_size).minutes).every(lit(slide_every).minutes)\
+            Slide.over(lit(window_size).seconds).every(lit(slide_every).seconds)\
                  .on(col(event_time_colname)).alias("w")
     # Define columns
     cols = [col(c) for c in group_colnames]
@@ -48,7 +48,7 @@ def compute_netflow_per_zone(
         window_size: int = 15, slide_every: int = 2):
     group_cols = [col("pulocationid"), col("taxi_type")]
     slide_window = \
-        Slide.over(lit(window_size).minutes).every(lit(slide_every).minutes)\
+        Slide.over(lit(window_size).seconds).every(lit(slide_every).seconds)\
             .on(col(event_time_colname)).alias("w")
     return table.window(slide_window)\
             .group_by(*[col("w")] + group_cols)\
@@ -67,7 +67,7 @@ def compute_netflow_per_zone(
 def compute_congestion_proxy_via_trip_speed(table: Table, window_size: int = 15, slide_every: int = 2):
     speed_col = col("trip_miles") / col("trip_duration") * lit(3600) # miles per hour
     slide_window = \
-        Slide.over(lit(window_size).minutes).every(lit(slide_every).minutes)\
+        Slide.over(lit(window_size).seconds).every(lit(slide_every).seconds)\
              .on(col("pickup_datetime")).alias("w")
     prefix = "trip"
     return table.window(slide_window)\
@@ -115,8 +115,8 @@ def join_table(table1: Table, table2: Table, join_by_cols: list[str], expression
 
 def compute_online_feature(table: Table):
     # # Feature 1: Recent demand per zone
-    WINDOW_SIZE = 15
-    SLIDE_EVERY = 1
+    WINDOW_SIZE = 10
+    SLIDE_EVERY = 2
 
 
     demand_per_zone_table = \

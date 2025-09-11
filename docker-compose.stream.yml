@@ -3,6 +3,21 @@ services:
   #### MESSAGING SYSTEM ####
   ##########################
 
+  # broker:
+  #   image: quay.io/debezium/kafka:${DEBEZIUM_VERSION}
+  #   ports:
+  #     - 9092:9092
+  #     - 9093:9093
+  #   environment:
+  #     - CLUSTER_ID=oh-sxaDRTcyAr6pFRbXyzA
+  #     - NODE_ID=1
+  #     - NODE_ROLE=combined
+  #     - KAFKA_CONTROLLER_QUORUM_VOTERS=1@broker:9093
+  #     - KAFKA_LISTENERS=PLAINTEXT://broker:9092,CONTROLLER://broker:9093
+  #     - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://broker:9092
+  #   networks:
+  #     - stream_nyc_network
+
   zookeeper:
     image: confluentinc/cp-zookeeper:7.9.2
     container_name: ms-zookeeper
@@ -43,7 +58,7 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       # Define how clients connect to brokers
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092,PLAINTEXT_HOST://broker:9092
       # How many copies are maintained for fault tolerance
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       # Schema Registry URL for storing and managing Avro schemas
@@ -111,7 +126,7 @@ services:
       CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: true
       CONNECT_PLUGIN_PATH: '/usr/share/java,/etc/kafka-connect/jars'
     volumes:
-      - $PWD/data_ingestion/kafka_connect/jars/:/etc/kafka-connect/jars
+      - $PWD/jars/:/etc/kafka-connect/jars
     networks:
       - stream_nyc_network
 
@@ -185,6 +200,8 @@ services:
       CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
       CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
       CONNECT_TOPIC_CREATION_ENABLE: true
+    volumes:
+      - ./jars/debezium-connector-cassandra-5:/kafka/connect/debezium-connector-cassandra-5
     networks:
       - stream_nyc_network
 
@@ -205,86 +222,162 @@ services:
   ############################
   #### THIRD PARTY TOOLS #####
   ############################
-  datasource1:
-    image: postgres:15
-    container_name: datasource1
-    command: ['postgres', '-c', 'wal_level=logical']
-    ports:
-      - "10001:5432"
-    environment:
-      - POSTGRES_DB=default
-      - POSTGRES_USER=datasource1
-      - POSTGRES_PASSWORD=datasource1
-    networks:
-      - stream_nyc_network
-
-
-  # datasource2:
-  #   image: cassandra:5.0.5
-  #   container_name: datasource2
+  # datasource1:
+  #   image: postgres:15
+  #   container_name: datasource1
+  #   command: ['postgres', '-c', 'wal_level=logical']
   #   ports:
-  #     - "9042:9042"
-  #   volumes:
-  #     - ./local/cassandra/config.yaml:/etc/cassandra/cassandra.yaml:ro
-  #     - ./local/volumes/cassandra:/var/lib/cassandra
+  #     - "10001:5432"
+  #   environment:
+  #     - POSTGRES_DB=default
+  #     - POSTGRES_USER=datasource1
+  #     - POSTGRES_PASSWORD=datasource1
   #   networks:
   #     - stream_nyc_network
-  #   healthcheck:
-  #     test: ["CMD-SHELL", "cqlsh -e 'DESCRIBE KEYSPACES' 127.0.0.1 9042 || exit 1"]
-  #     interval: 30s
-  #     timeout: 10s
-  #     retries: 5
 
 
-  datasource3:
-    image: mongodb/mongodb-community-server:latest
-    container_name: datasource3
+  datasource2:
+    image: debezium/example-cassandra:3.1.3.Final
+    container_name: datasource2
+    build:
+      context: ./local/cassandra
     ports:
-      - 27017:27017
-    command: >
-      mongod
-        --replSet rs0
-        --bind_ip_all
-        --port 27017
-    volumes:
-      - ./local/volumes/mongodb:/data/db
-      - ./local/mongodb/init-replica-set.js:/scripts/init-replica-set.js
+      - 9042:9042
+    networks:
+      - stream_nyc_network
     healthcheck:
-      test: echo 'rs.initiated = rs.status().hasOwnProperty("set") && rs.status().members.length > 0; rs.initiated' | mongo --quiet
-      interval: 10s
+      test: ["CMD-SHELL", "cqlsh -e 'DESCRIBE KEYSPACES' 127.0.0.1 9042 || exit 1"]
+      interval: 30s
       timeout: 10s
-      retries: 10
-      start_period: 30s
-    networks:
-      - stream_nyc_network
+      retries: 5
+    volumes:
+      - cassandra_data:/var/lib/cassandra
+    depends_on:
+      - zookeeper
+      - broker
+
+  # datasource3:
+  #   image: mongodb/mongodb-community-server:latest
+  #   container_name: datasource3
+  #   ports:
+  #     - 27017:27017
+  #   command: >
+  #     mongod
+  #       --replSet rs0
+  #       --bind_ip_all
+  #       --port 27017
+  #   volumes:
+  #     - ./local/volumes/mongodb:/data/db
+  #     - ./local/mongodb/init-replica-set.js:/scripts/init-replica-set.js
+  #   healthcheck:
+  #     test: echo 'rs.initiated = rs.status().hasOwnProperty("set") && rs.status().members.length > 0; rs.initiated' | mongo --quiet
+  #     interval: 10s
+  #     timeout: 10s
+  #     retries: 10
+  #     start_period: 30s
+  #   networks:
+  #     - stream_nyc_network
 
 
-  datasource3-ui:
-    image: mongo-express
-    container_name: mongo-express
+  # datasource3-ui:
+  #   image: mongo-express
+  #   container_name: mongo-express
+  #   ports:
+  #     - "8082:8081"
+  #   environment:
+  #     ME_CONFIG_MONGODB_SERVER: datasource3
+  #   restart: unless-stopped
+  #   networks:
+  #     - stream_nyc_network
+
+  # datamart_db:
+  #   container_name: datamart_db
+  #   image: postgres:latest
+  #   ports:
+  #     - '5434:5432' # Access via Thrift protocol
+  #   environment:
+  #     POSTGRES_USER: '${DATAMART_USER}'
+  #     POSTGRES_PASSWORD: '${DATAMART_PASSWORD}'
+  #     POSTGRES_DB: "${DATAMART_DB}"
+  #   networks:
+  #     - stream_nyc_network
+  #   volumes:
+  #     - ./local/volumes/datamart_db:/var/lib/postgresql/data
+
+
+
+  ########################
+  #### HIVE METASTORE ####
+  ########################
+  trino:
     ports:
-      - "8082:8081"
-    environment:
-      ME_CONFIG_MONGODB_SERVER: datasource3
-    restart: unless-stopped
+      - "10000:8080"
+    image: "trinodb/trino:476"
+    volumes:
+      - ./local/trino/etc:/usr/lib/trino/etc:ro
+      - ./local/trino/catalog:/etc/trino/catalog
+    depends_on:
+      - hive-metastore
     networks:
       - stream_nyc_network
 
-  datamart_db:
-    container_name: datamart_db
+
+  metastore_db:
+    container_name: hive-metastore-db
     image: postgres:latest
     ports:
-      - '5434:5432' # Access via Thrift protocol
+      - '5433:5432' # Access via Thrift protocol
     environment:
-      POSTGRES_USER: '${DATAMART_USER}'
-      POSTGRES_PASSWORD: '${DATAMART_PASSWORD}'
-      POSTGRES_DB: "${DATAMART_DB}"
+      POSTGRES_USER: '${METADATA_USER}'
+      POSTGRES_PASSWORD: '${METADATA_PASSWORD}'
+      POSTGRES_DB: "${METADATA_DB}"
     networks:
       - stream_nyc_network
     volumes:
-      - ./local/volumes/datamart_db:/var/lib/postgresql/data
+      - ./local/volumes/metastore_db:/var/lib/postgresql/data
+
+  hive-metastore:
+    container_name: hive-metastore
+    image: 'starburstdata/hive:3.1.3-e.15'
+    ports:
+      - '9083:9083' # Access via Thrift protocol
+    environment:
+      HIVE_METASTORE_DRIVER: org.postgresql.Driver
+      HIVE_METASTORE_JDBC_URL: 'jdbc:postgresql://metastore_db:5432/${METADATA_DB}'
+      HIVE_METASTORE_USER: '${METADATA_USER}'
+      HIVE_METASTORE_PASSWORD: '${METADATA_PASSWORD}'
+      # HIVE_METASTORE_WAREHOUSE_DIR: s3://datalake/ # HDFS config, we don't need it
+      # HIVE_METASTORE_USERS_IN_ADMIN_ROLE: "admin" # We also don't need it
+      # S3_ENDPOINT: http://minio:9000
+      # S3_ACCESS_KEY: "${MINIO_ACCESS_KEY}"
+      # S3_SECRET_KEY: "${MINIO_SECRET_KEY}"
+      # S3_PATH_STYLE_ACCESS: "true"
+      # Below arguments exist for no reasons, but
+      # we can not live without it
+      REGION: ""
+      GOOGLE_CLOUD_KEY_FILE_PATH: ""
+      AZURE_ADL_CLIENT_ID: ""
+      AZURE_ADL_CREDENTIAL: ""
+      AZURE_ADL_REFRESH_URL: ""
+      AZURE_ABFS_STORAGE_ACCOUNT: ""
+      AZURE_ABFS_ACCESS_KEY: ""
+      AZURE_WASB_STORAGE_ACCOUNT: ""
+      AZURE_ABFS_OAUTH: ""
+      AZURE_ABFS_OAUTH_TOKEN_PROVIDER: ""
+      AZURE_ABFS_OAUTH_CLIENT_ID: ""
+      AZURE_ABFS_OAUTH_SECRET: ""
+      AZURE_ABFS_OAUTH_ENDPOINT: ""
+      AZURE_WASB_ACCESS_KEY: ""
+    depends_on:
+      - metastore_db
+    networks:
+      - stream_nyc_network
 
 
 networks:
   stream_nyc_network:
     driver: bridge
+
+
+volumes:
+  cassandra_data:

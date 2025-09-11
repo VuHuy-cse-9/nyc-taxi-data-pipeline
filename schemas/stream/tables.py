@@ -190,6 +190,6 @@ CREATE TABLE {} (
     'connector' = 'kafka',
     'topic' = 'online-feature',
     'properties.bootstrap.servers' = '{}',
-    'format' = 'json'
+    'format' = 'debezium-json'
 )
 """

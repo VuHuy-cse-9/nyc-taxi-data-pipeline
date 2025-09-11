@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
     "aiokafka>=0.12.0",
+    "cassandra-driver>=3.29.2",
     "ipykernel>=6.30.1",
     "minio>=7.2.16",
     "pandas>=2.3.1",

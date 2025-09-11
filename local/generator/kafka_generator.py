@@ -6,6 +6,7 @@ from threading import Thread
 from copy import deepcopy
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
+import time
 
 tz = ZoneInfo("Asia/Ho_Chi_Minh")
 
@@ -32,8 +33,6 @@ async def consume_and_produce(topic: str, input_file: str,
         with open(input_file, "r") as file:
             sample_data = json.loads(s=file.read())
 
-        print(f"Sample data loaded: {sample_data}")
-
         current_datetime = datetime.now(tz)
 
         i = 0
@@ -57,10 +56,12 @@ async def consume_and_produce(topic: str, input_file: str,
             except Exception as e:
                 logger.error(f"Error processing message: {e}", exc_info=True)
 
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(1.0)
 
     except KeyboardInterrupt:
         logger.info("Shutting down consumer...")
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}", exc_info=True)
     finally:
         # Ensure clean shutdown
         await producer.stop()
@@ -79,6 +80,7 @@ if __name__ == "__main__":
         daemon=True,
     )
     fhhv_thread.start()
+    time.sleep(1)
     
     green_taxi_thread = Thread(
         target=lambda: asyncio.run(consume_and_produce(
@@ -90,6 +92,7 @@ if __name__ == "__main__":
         daemon=True,
     )
     green_taxi_thread.start()
+    time.sleep(1)
 
     yellow_taxi_thread = Thread(
        target=lambda: asyncio.run(consume_and_produce(
@@ -101,6 +104,7 @@ if __name__ == "__main__":
        daemon=True,
     )
     yellow_taxi_thread.start()
+    time.sleep(1)
 
     # Keep the main thread alive
     fhhv_thread.join()
