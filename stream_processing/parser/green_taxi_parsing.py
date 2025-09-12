@@ -8,44 +8,6 @@ logger = logging.getLogger(__name__)
 
 JARS_PATH = f"{os.getcwd()}/jars"
 
-# source_ddl = """
-# CREATE TABLE raw_green_taxi (
-#     payload ROW(
-#         after ROW(
-#             id STRING,
-#             vendorid INT,
-#             lpep_pickup_datetime STRING,
-#             lpep_dropoff_datetime STRING,
-#             passenger_count INT,
-#             trip_distance FLOAT,
-#             ratecodeid INT,
-#             store_and_fwd_flag STRING,
-#             pulocationid INT,
-#             dolocationid INT,
-#             payment_type INT,
-#             fare_amount FLOAT,
-#             extra FLOAT,
-#             mta_tax FLOAT,
-#             tip_amount FLOAT,
-#             tolls_amount FLOAT,
-#             improvement_surcharge FLOAT,
-#             total_amount FLOAT,
-#             ehail_fee FLOAT,
-#             trip_type INT,
-#             congestion_surcharge FLOAT,
-#             cbd_congestion_fee FLOAT
-#         )
-#     )
-# ) WITH (
-#     'connector' = 'kafka',
-#     'topic' = 'raw.public.green_taxi',
-#     'properties.bootstrap.servers' = 'localhost:9092',
-#     'properties.group.id' = 'parser-consumer-2-group',
-#     'scan.startup.mode' = 'latest-offset',
-#     'format' = 'json'
-# )
-# """
-
 source_ddl = """
 CREATE TABLE raw_green_taxi (
     payload ROW(
@@ -81,7 +43,7 @@ CREATE TABLE raw_green_taxi (
     'connector' = 'kafka',
     'topic' = 'raw.public.green_taxi',
     'properties.bootstrap.servers' = 'localhost:9092',
-    'properties.group.id' = 'parser-consumer-2-group',
+    'properties.group.id' = 'flink-consumer-group',
     'scan.startup.mode' = 'latest-offset',
     'format' = 'json',
     'scan.watermark.idle-timeout'='5second'
@@ -94,6 +56,7 @@ def parse_data(t_env: TableEnvironment) -> Table:
     t_env.execute_sql(source_ddl)
 
     table = t_env.from_path("raw_green_taxi")
+    table.execute().print()
 
     table = table.select(
         col('payload').get('after').get('id').alias('id'),

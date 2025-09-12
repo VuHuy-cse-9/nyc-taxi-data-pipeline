@@ -190,13 +190,21 @@ def main():
         + f"file://{JARS_PATH}/kafka-clients-3.9.0.jar;"
         + f"file://{JARS_PATH}/postgresql-42.7.7.jar;"
         + f"file://{JARS_PATH}/flink-connector-jdbc-3.3.0-1.20.jar"
+        # + f"file://{JARS_PATH}/flink-avro-2.1.0.jar;"
+        # + f"file://{JARS_PATH}/avro-1.11.4.jar;"
+        # + f"file://{JARS_PATH}/jackson-databind-2.20.0.jar;"
+        # + f"file://{JARS_PATH}/jackson-core-2.20.0.jar;"
+        # + f"file://{JARS_PATH}/jackson-annotations-2.20.jar"
     )
 
     # Step 1: Parse data from source
     print("Parsing data from source...")
-    fhvhv_table = fhvhv_parse_data(t_env)
+    # fhvhv_table = fhvhv_parse_data(t_env)
     green_taxi_table = green_taxi_parse_data(t_env)
-    yellow_taxi_table = yellow_taxi_parse_data(t_env)
+    # yellow_taxi_table = yellow_taxi_parse_data(t_env)
+
+    print("Green taxi table:")
+    green_taxi_table.execute().print()
 
     # Step 2: Preprocess raw data
     fhvhv_table = fhvhv_preprocess(fhvhv_table)
