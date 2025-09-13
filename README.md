@@ -8,7 +8,7 @@ uv sync --extra flink
 
 # Streaming pipeline
 ## 1. Register connector to Debezium
-./local/debezium/run.sh register_connector ./local/debezium/datasource1-cdc-json.json
+./local/debezium/run.sh register_connector ./local/debezium/datasource1-cdc-avro.json
 ./local/debezium/run.sh register_connector ./local/debezium/datasource2-cdc.json
 ./local/debezium/run.sh register_connector ./local/debezium/datasource3-cdc.json
 

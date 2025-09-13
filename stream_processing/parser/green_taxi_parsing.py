@@ -8,8 +8,10 @@ logger = logging.getLogger(__name__)
 
 JARS_PATH = f"{os.getcwd()}/jars"
 
-source_ddl = """
+# DEBEZIUM JSON
+json_source_ddl = """
 CREATE TABLE raw_green_taxi (
+    id STRING,
     payload ROW(
         after ROW(
             id STRING,
@@ -45,18 +47,62 @@ CREATE TABLE raw_green_taxi (
     'properties.bootstrap.servers' = 'localhost:9092',
     'properties.group.id' = 'flink-consumer-group',
     'scan.startup.mode' = 'latest-offset',
-    'format' = 'json',
-    'scan.watermark.idle-timeout'='5second'
+    'scan.watermark.idle-timeout'='5second',
+    'value.format' = 'avro-confluent',
+    'value.avro-confluent.url' = 'http://localhost:8081',
+    'key.format' = 'avro-confluent',
+    'key.avro-confluent.url' = 'http://localhost:8081',
+    'key.fields' = 'id'
 )
 """
 
-def parse_data(t_env: TableEnvironment) -> Table:
+
+avro_source_ddl = """
+CREATE TABLE raw_green_taxi (
+    id STRING,
+    vendorid INT,
+    lpep_pickup_datetime STRING,
+    lpep_dropoff_datetime STRING,
+    passenger_count INT,
+    trip_distance DOUBLE,
+    ratecodeid INT,
+    store_and_fwd_flag STRING,
+    pulocationid INT,
+    dolocationid INT,
+    payment_type INT,
+    fare_amount DOUBLE,
+    extra DOUBLE,
+    mta_tax DOUBLE,
+    tip_amount DOUBLE,
+    tolls_amount DOUBLE,
+    improvement_surcharge DOUBLE,
+    total_amount DOUBLE,
+    ehail_fee DOUBLE,
+    trip_type DOUBLE,
+    congestion_surcharge DOUBLE,
+    cbd_congestion_fee DOUBLE,
+    pickup_datetime AS TO_TIMESTAMP(lpep_pickup_datetime),
+    dropoff_datetime AS TO_TIMESTAMP(lpep_dropoff_datetime),
+    WATERMARK FOR pickup_datetime AS pickup_datetime - INTERVAL '1' SECOND
+
+) WITH (
+    'connector' = 'kafka',
+    'topic' = 'raw.public.green_taxi',
+    'properties.bootstrap.servers' = 'localhost:9092',
+    'properties.group.id' = 'flink-consumer-group',
+    'scan.startup.mode' = 'latest-offset',
+    'scan.watermark.idle-timeout'='5second',
+    'format' = 'debezium-avro-confluent',
+    'debezium-avro-confluent.url' = 'http://localhost:8081'
+)
+"""
+
+def parse_json_data(t_env: TableEnvironment) -> Table:
     
     # Create table from schema.
-    t_env.execute_sql(source_ddl)
+    t_env.execute_sql(json_source_ddl)
 
     table = t_env.from_path("raw_green_taxi")
-    table.execute().print()
 
     table = table.select(
         col('payload').get('after').get('id').alias('id'),
@@ -85,6 +131,40 @@ def parse_data(t_env: TableEnvironment) -> Table:
 
     return table
 
+def parse_avro_data(t_env: TableEnvironment) -> Table:
+
+    # Create table from schema.
+    t_env.execute_sql(avro_source_ddl)
+
+    table = t_env.from_path("raw_green_taxi")
+
+    table = table.select(
+        col('id'),
+        col('vendorid'),
+        col('passenger_count'),
+        col('trip_distance'),
+        col('ratecodeid'),
+        col('store_and_fwd_flag'),
+        col('pulocationid'),
+        col('dolocationid'),
+        col('payment_type'),
+        col('fare_amount'),
+        col('extra'),
+        col('mta_tax'),
+        col('tip_amount'),
+        col('tolls_amount'),
+        col('improvement_surcharge'),
+        col('total_amount'),
+        col('ehail_fee'),
+        col('trip_type'),
+        col('congestion_surcharge'),
+        col('cbd_congestion_fee'),
+        col('pickup_datetime'),
+        col('dropoff_datetime')
+    )
+
+    return table
+
 if __name__ == "__main__":
     # Environment configuration
     logger.info("Setting up Flink environment...")
@@ -101,7 +181,7 @@ if __name__ == "__main__":
     # Load sample data from parquet file
     logger.info("Loading sample data...")
 
-    table = parse_data(t_env)
+    table = parse_avro_data(t_env)
 
     logger.info("Inserting data into sink table...")
     table.limit(1000).execute().print()

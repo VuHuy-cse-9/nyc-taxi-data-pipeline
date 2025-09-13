@@ -120,7 +120,7 @@ async def main():
             }
             await insert_record(pool, INSERT_QUERY, record)
 
-            await asyncio.sleep(0.5)  # To avoid overwhelming the database with too many requests
+            await asyncio.sleep(2.0)  # To avoid overwhelming the database with too many requests
             logger.info(f"Inserted record {index + 1}/{len(green_taxi_df)}")
     
     finally:
