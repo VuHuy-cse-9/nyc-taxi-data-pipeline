@@ -10,8 +10,6 @@
       "plugin.name": "pgoutput",
       "database.server.name": "customer1",
       "table.include.list": "public.green_taxi",
-      "topic.prefix": "raw",
-      "key.converter.schemas.enable": false,
-      "value.converter.schemas.enable": false
+      "topic.prefix": "raw"
     }
 }

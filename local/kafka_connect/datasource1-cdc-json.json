@@ -1,0 +1,15 @@
+{
+  "name": "datasource1",
+  "config": {
+      "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
+      "connection.url": "jdbc:postgresql://datasource1:5432/default",
+      "connection.user": "datasource1",
+      "connection.password": "datasource1",
+      "topic.prefix": "raw",
+      "poll.interval.ms" : 3600000,
+      "table.whitelist" : "green_taxi",
+      "mode":"bulk",
+      "key.converter.schemas.enable": "false",
+      "value.converter.schemas.enable": "false"
+  }
+}

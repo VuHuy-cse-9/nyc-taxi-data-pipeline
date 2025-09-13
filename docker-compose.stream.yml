@@ -108,10 +108,10 @@ services:
       CONNECT_KEY_CONVERTER: org.apache.kafka.connect.storage.StringConverter
       CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE: false
       CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
-      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: true
+      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: false
       CONNECT_PLUGIN_PATH: '/usr/share/java,/etc/kafka-connect/jars'
     volumes:
-      - $PWD/jars/:/etc/kafka-connect/jars
+      - $PWD/jars/connect_plugins:/etc/kafka-connect/jars
     networks:
       - stream_nyc_network
 
@@ -178,12 +178,13 @@ services:
       CONFIG_STORAGE_TOPIC: connect_configs
       OFFSET_STORAGE_TOPIC: connect_offsets
       # Set to Avro for higher performance
-      KEY_CONVERTER: io.confluent.connect.avro.AvroConverter
-      VALUE_CONVERTER: io.confluent.connect.avro.AvroConverter
-      CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
-      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
-      # KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
-      # VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      # KEY_CONVERTER: io.confluent.connect.avro.AvroConverter
+      # VALUE_CONVERTER: io.confluent.connect.avro.AvroConverter
+      # CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      # CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: false # Disable schema for JSON converter
       CONNECT_TOPIC_CREATION_ENABLE: true
     volumes:
       - ./jars/debezium_plugins:/kafka/connect/plugins
