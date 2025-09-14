@@ -7,23 +7,9 @@ from uuid import uuid4
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-INSERT_QUERY = """
-INSERT INTO default.user_account (id, name, email, value)
-VALUES (?, ?, ?, ?)
-"""
-
 CREATE_KEYSPACE = """
 CREATE KEYSPACE IF NOT EXISTS default 
 WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};
-"""
-
-CREATE_TABLE = """
-CREATE TABLE IF NOT EXISTS default.user_account (
-    id UUID PRIMARY KEY,
-    name TEXT,
-    email TEXT,
-    value INT
-)
 """
 
 CREATE_TABLE = """
