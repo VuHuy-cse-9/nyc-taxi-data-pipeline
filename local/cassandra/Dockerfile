@@ -12,8 +12,10 @@ ENV DEBEZIUM_VERSION=2.7.4.Final \
 COPY cassandra.yaml $CASSANDRA_YAML
 
 RUN mkdir $DEBEZIUM_HOME
-RUN curl -fSL -o $DEBEZIUM_HOME/debezium-connector-cassandra.jar \
-                 $MAVEN_CENTRAL/io/debezium/debezium-connector-cassandra-4/$DEBEZIUM_VERSION/debezium-connector-cassandra-4-$DEBEZIUM_VERSION-jar-with-dependencies.jar
+# RUN curl -fSL -o $DEBEZIUM_HOME/debezium-connector-cassandra.jar \
+#                  $MAVEN_CENTRAL/io/debezium/debezium-connector-cassandra-4/$DEBEZIUM_VERSION/debezium-connector-cassandra-4-$DEBEZIUM_VERSION-jar-with-dependencies.jar
+COPY debezium-connector-cassandra-4-2.7.4.Final-jar-with-dependencies.jar $DEBEZIUM_HOME/debezium-connector-cassandra.jar
+
 
 COPY log4j.properties config.properties inventory.cql $DEBEZIUM_HOME/
 COPY startup-script.sh $DEBEZIUM_HOME/startup-script.sh

@@ -9,44 +9,83 @@ logger = logging.getLogger(__name__)
 
 JARS_PATH = f"{os.getcwd()}/jars"
 
+# source_ddl = """
+# CREATE TABLE raw_yellow_taxi (
+#     payload ROW(
+#         after ROW(
+#             id STRING,
+#             vendorid INT,
+#             tpep_pickup_datetime STRING,
+#             tpep_dropoff_datetime STRING,
+#             passenger_count INT,
+#             trip_distance FLOAT,
+#             ratecodeid INT,
+#             store_and_fwd_flag STRING,
+#             pulocationid INT,
+#             dolocationid INT,
+#             payment_type INT,
+#             fare_amount FLOAT,
+#             extra FLOAT,
+#             mta_tax FLOAT,
+#             tip_amount FLOAT,
+#             tolls_amount FLOAT,
+#             improvement_surcharge FLOAT,
+#             total_amount FLOAT,
+#             congestion_surcharge FLOAT,
+#             airport_fee FLOAT,
+#             cbd_congestion_fee FLOAT
+#         )
+#     ),
+#     pickup_datetime AS TO_TIMESTAMP(payload.after.tpep_pickup_datetime),
+#     dropoff_datetime AS TO_TIMESTAMP(payload.after.tpep_dropoff_datetime),
+#     WATERMARK FOR pickup_datetime AS pickup_datetime - INTERVAL '1' SECOND
+# ) WITH (
+#     'connector' = 'kafka',
+#     'topic' = 'raw.public.yellow_taxi',
+#     'properties.bootstrap.servers' = 'localhost:9092',
+#     'properties.group.id' = 'parser-consumer-2-group',
+#     'scan.startup.mode' = 'latest-offset',
+#     'format' = 'json',
+#     'scan.watermark.idle-timeout'='5second'
+# )
+# """
+
+
 source_ddl = """
 CREATE TABLE raw_yellow_taxi (
-    payload ROW(
-        after ROW(
-            id STRING,
-            vendorid INT,
-            tpep_pickup_datetime STRING,
-            tpep_dropoff_datetime STRING,
-            passenger_count INT,
-            trip_distance FLOAT,
-            ratecodeid INT,
-            store_and_fwd_flag STRING,
-            pulocationid INT,
-            dolocationid INT,
-            payment_type INT,
-            fare_amount FLOAT,
-            extra FLOAT,
-            mta_tax FLOAT,
-            tip_amount FLOAT,
-            tolls_amount FLOAT,
-            improvement_surcharge FLOAT,
-            total_amount FLOAT,
-            congestion_surcharge FLOAT,
-            airport_fee FLOAT,
-            cbd_congestion_fee FLOAT
-        )
-    ),
-    pickup_datetime AS TO_TIMESTAMP(payload.after.tpep_pickup_datetime),
-    dropoff_datetime AS TO_TIMESTAMP(payload.after.tpep_dropoff_datetime),
+    id STRING,
+    vendorid INT,
+    tpep_pickup_datetime STRING,
+    tpep_dropoff_datetime STRING,
+    passenger_count INT,
+    trip_distance FLOAT,
+    ratecodeid INT,
+    store_and_fwd_flag STRING,
+    pulocationid INT,
+    dolocationid INT,
+    payment_type INT,
+    fare_amount FLOAT,
+    extra FLOAT,
+    mta_tax FLOAT,
+    tip_amount FLOAT,
+    tolls_amount FLOAT,
+    improvement_surcharge FLOAT,
+    total_amount FLOAT,
+    congestion_surcharge FLOAT,
+    airport_fee FLOAT,
+    cbd_congestion_fee FLOAT,
+    pickup_datetime AS TO_TIMESTAMP(tpep_pickup_datetime),
+    dropoff_datetime AS TO_TIMESTAMP(tpep_dropoff_datetime),
     WATERMARK FOR pickup_datetime AS pickup_datetime - INTERVAL '1' SECOND
 ) WITH (
     'connector' = 'kafka',
-    'topic' = 'raw.public.yellow_taxi',
+    'topic' = 'raw.default.yellow_taxi',
     'properties.bootstrap.servers' = 'localhost:9092',
     'properties.group.id' = 'parser-consumer-2-group',
     'scan.startup.mode' = 'latest-offset',
-    'format' = 'json',
-    'scan.watermark.idle-timeout'='5second'
+    'format' = 'debezium-json',
+    'scan.watermark.idle-timeout'='5second',
+    'debezium-json.schema-include' = 'true'
 )
 """
 
@@ -56,6 +95,8 @@ def parse_data(t_env: TableEnvironment) -> Table:
     t_env.execute_sql(source_ddl)
 
     table = t_env.from_path("raw_yellow_taxi")
+    
+    table.execute().print()
 
     table = table.select(
         col('payload').get('after').get('id').alias('id'),

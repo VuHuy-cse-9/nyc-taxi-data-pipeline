@@ -206,11 +206,11 @@ def main():
     # Step 1: Parse data from source
     print("Parsing data from source...")
     # fhvhv_table = fhvhv_parse_data(t_env)
-    green_taxi_table = green_taxi_parse_data(t_env)
-    # yellow_taxi_table = yellow_taxi_parse_data(t_env)
+    # green_taxi_table = green_taxi_parse_data(t_env)
+    yellow_taxi_table = yellow_taxi_parse_data(t_env)
 
     print("Green taxi table:")
-    green_taxi_table.execute().print()
+    yellow_taxi_table.execute().print()
 
     # Step 2: Preprocess raw data
     fhvhv_table = fhvhv_preprocess(fhvhv_table)

@@ -9,6 +9,10 @@
         "name": "datasource3-mongo",
         "connector.id": "mongodb",
         "mongodb.hosts": "datasource3:27017",
-        "database.include.list": "datasource3"
+        "database.include.list": "datasource3",
+        "key.converter.schemas.enable": true,
+        "value.converter.schemas.enable": true,
+        "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+        "value.converter": "org.apache.kafka.connect.json.JsonConverter"
     }
 }
