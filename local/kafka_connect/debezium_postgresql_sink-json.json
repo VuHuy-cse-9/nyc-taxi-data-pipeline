@@ -1,0 +1,13 @@
+{
+  "name": "online-feature-sink",
+  "config": {
+    "tasks.max": "1",
+    "connector.class": "io.debezium.connector.jdbc.JdbcSinkConnector",
+    "topics": "online-feature",
+    "connection.url": "jdbc:postgresql://datamart_db:5432/datamart",
+    "connection.username": "datamart_user",
+    "connection.password": "datamart_password",
+    "replace.null.with.default": "true",
+    "schemas.enable": "false"
+  }
+}

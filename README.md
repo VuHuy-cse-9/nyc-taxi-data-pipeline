@@ -12,7 +12,7 @@ uv sync --extra flink
 ./local/debezium/run.sh register_connector ./local/debezium/datasource2-cdc.json
 ./local/debezium/run.sh register_connector ./local/debezium/datasource3-mongo.json
 
-./local/kafka_connect/run.sh register_connector ./local/kafka_connect/datasource1-cdc-json.json
+./local/kafka_connect/run.sh register_connector ./local/kafka_connect/postgresql_sink-json.json
 
 ## 2. Generate data
 python3 -m local.generator.datasource1_generator

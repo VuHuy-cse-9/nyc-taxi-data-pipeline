@@ -105,10 +105,12 @@ services:
       CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
       CONNECT_STATUS_STORAGE_TOPIC: docker-connect-status
       CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
-      CONNECT_KEY_CONVERTER: org.apache.kafka.connect.storage.StringConverter
-      CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE: false
+      CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE: true
+      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: true
+      CONNECT_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
       CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
-      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: false
+      CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
       CONNECT_PLUGIN_PATH: '/usr/share/java,/etc/kafka-connect/jars'
     volumes:
       - $PWD/jars/connect_plugins:/etc/kafka-connect/jars
@@ -276,19 +278,19 @@ services:
   #   networks:
   #     - stream_nyc_network
 
-  # datamart_db:
-  #   container_name: datamart_db
-  #   image: postgres:latest
-  #   ports:
-  #     - '5434:5432' # Access via Thrift protocol
-  #   environment:
-  #     POSTGRES_USER: '${DATAMART_USER}'
-  #     POSTGRES_PASSWORD: '${DATAMART_PASSWORD}'
-  #     POSTGRES_DB: "${DATAMART_DB}"
-  #   networks:
-  #     - stream_nyc_network
-  #   volumes:
-  #     - ./local/volumes/datamart_db:/var/lib/postgresql/data
+  datamart_db:
+    container_name: datamart_db
+    image: postgres:latest
+    ports:
+      - '5434:5432' # Access via Thrift protocol
+    environment:
+      POSTGRES_USER: '${DATAMART_USER}'
+      POSTGRES_PASSWORD: '${DATAMART_PASSWORD}'
+      POSTGRES_DB: "${DATAMART_DB}"
+    networks:
+      - stream_nyc_network
+    volumes:
+      - ./local/volumes/datamart_db:/var/lib/postgresql/data
 
 
 

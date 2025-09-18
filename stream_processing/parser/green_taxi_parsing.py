@@ -43,7 +43,7 @@ CREATE TABLE raw_green_taxi (
     'scan.startup.mode' = 'latest-offset',
     'scan.watermark.idle-timeout'='5second',
     'format' = 'debezium-json',
-    'debezium-json.schema-include' = 'false'
+    'debezium-json.schema-include' = 'true'
 )
 """
 
