@@ -1,6 +1,6 @@
 import os
 from pyflink.table import EnvironmentSettings, TableEnvironment, Table
-from pyflink.table.expressions import col
+from pyflink.table.expressions import col, json
 import logging
 from pyflink.table.types import DataTypes
 
@@ -61,7 +61,13 @@ source_ddl = """
 CREATE TABLE raw_for_hire_vehicle (
     payload ROW(
         after STRING
-    )
+    ),
+    data AS payload.after,
+    pickup_datetime AS TO_TIMESTAMP(JSON_VALUE(payload.after, '$.pickup_datetime' RETURNING STRING), 'yyyy-MM-dd''T''HH:mm:ss.SSS'),
+    dropoff_datetime AS TO_TIMESTAMP(JSON_VALUE(payload.after, '$.dropoff_datetime' RETURNING STRING), 'yyyy-MM-dd''T''HH:mm:ss.SSS'),
+    request_datetime AS TO_TIMESTAMP(JSON_VALUE(payload.after, '$.request_datetime' RETURNING STRING), 'yyyy-MM-dd''T''HH:mm:ss.SSS'),
+    on_scene_datetime AS TO_TIMESTAMP(JSON_VALUE(payload.after, '$.on_scene_datetime' RETURNING STRING), 'yyyy-MM-dd''T''HH:mm:ss.SSS'),
+    WATERMARK FOR pickup_datetime AS pickup_datetime - INTERVAL '1' SECOND
 ) WITH (
     'connector' = 'kafka',
     'topic' = 'raw.datasource3.fhvhv_taxi',
@@ -80,57 +86,42 @@ def parse_data(t_env: TableEnvironment) -> Table:
 
     table = t_env.from_path("raw_for_hire_vehicle")
     table = table.select(
-        col('payload').get('after').alias('payload')
-    )
-    
-    table = table.select(
-        col('payload').is_json().alias('is_json'),
-        col('payload').json_query("$._id").alias('payload'),
-    )
-
-    table = table.select(
-        col('payload').is_json(),
-        col('payload').json_query("$.hvfhs_license_num"),
-    ) 
-
-    # table = table.select(
-    #     col('payload').json_query("$.id").alias('id'),
-    #     col('payload').json_query("$.hvfhs_license_num").alias('hvfhs_license_num'),
-    #     col('payload').json_query("$.dispatching_base_num").alias('dispatching_base_num'),
-    #     col('payload').json_query("$.originating_base_num").alias('originating_base_num'),
-    #     col('payload').json_query("$.pulocationid").alias('pulocationid'),
-    #     col('payload').json_query("$.dolocationid").alias('dolocationid'),
-    # )
-
-    table.execute().print()
-
-    table = table.select(
-        col('payload').get('after').get('id').alias('id'),
-        col('payload').get('after').get('hvfhs_license_num').alias('hvfhs_license_num'),
-        col('payload').get('after').get('dispatching_base_num').alias('dispatching_base_num'),
-        col('payload').get('after').get('originating_base_num').alias('originating_base_num'),
-        col('payload').get('after').get('pulocationid').alias('pulocationid'),
-        col('payload').get('after').get('dolocationid').alias('dolocationid'),
-        col('payload').get('after').get('trip_miles').alias('trip_miles'),
-        col('payload').get('after').get('trip_time').alias('trip_time'),
-        col('payload').get('after').get('base_passenger_fare').alias('base_passenger_fare'),
-        col('payload').get('after').get('tolls').alias('tolls'),
-        col('payload').get('after').get('bcf').alias('bcf'),
-        col('payload').get('after').get('sales_tax').alias('sales_tax'),
-        col('payload').get('after').get('congestion_surcharge').alias('congestion_surcharge'),
-        col('payload').get('after').get('airport_fee').alias('airport_fee'),
-        col('payload').get('after').get('tips').alias('tips'),
-        col('payload').get('after').get('driver_pay').alias('driver_pay'),
-        col('payload').get('after').get('shared_request_flag').alias('shared_request_flag'),
-        col('payload').get('after').get('shared_match_flag').alias('shared_match_flag'),
-        col('payload').get('after').get('access_a_ride_flag').alias('access_a_ride_flag'),
-        col('payload').get('after').get('wav_request_flag').alias('wav_request_flag'),
-        col('payload').get('after').get('wav_match_flag').alias('wav_match_flag'),
-        col('payload').get('after').get('cbd_congestion_fee').alias('cbd_congestion_fee'),
+        col('data').alias('payload'),
         col('pickup_datetime'),
-        col('dropoff_datetime')
-
+        col('dropoff_datetime'),
+        col('request_datetime'),
+        col('on_scene_datetime')
     )
+
+    table = table.select(
+        col('payload').json_value('$._id["$oid"]', DataTypes.STRING()).alias('id'),
+        col('payload').json_value("$.hvfhs_license_num", DataTypes.STRING()).alias('hvfhs_license_num'),
+        col('payload').json_value("$.dispatching_base_num", DataTypes.STRING()).alias('dispatching_base_num'),
+        col('payload').json_value("$.originating_base_num", DataTypes.STRING()).alias('originating_base_num'),
+        col('payload').json_value("$.PULocationID", DataTypes.INT()).alias('pulocationid'),
+        col('payload').json_value("$.DOLocationID", DataTypes.INT()).alias('dolocationid'),
+        col('payload').json_value("$.trip_miles", DataTypes.DOUBLE()).alias('trip_miles'),
+        col('payload').json_value("$.trip_time", DataTypes.INT()).alias('trip_time'),
+        col('payload').json_value("$.base_passenger_fare", DataTypes.DOUBLE()).alias('base_passenger_fare'),
+        col('payload').json_value("$.tolls", DataTypes.DOUBLE()).alias('tolls'),
+        col('payload').json_value("$.bcf", DataTypes.DOUBLE()).alias('bcf'),
+        col('payload').json_value("$.sales_tax", DataTypes.DOUBLE()).alias('sales_tax'),
+        col('payload').json_value("$.congestion_surcharge", DataTypes.DOUBLE()).alias('congestion_surcharge'),
+        col('payload').json_value("$.airport_fee", DataTypes.DOUBLE()).alias('airport_fee'),
+        col('payload').json_value("$.tips", DataTypes.DOUBLE()).alias('tips'),
+        col('payload').json_value("$.driver_pay", DataTypes.DOUBLE()).alias('driver_pay'),
+        col('payload').json_value("$.shared_request_flag", DataTypes.STRING()).alias('shared_request_flag'),
+        col('payload').json_value("$.shared_match_flag", DataTypes.STRING()).alias('shared_match_flag'),
+        col('payload').json_value("$.access_a_ride_flag", DataTypes.STRING()).alias('access_a_ride_flag'),
+        col('payload').json_value("$.wav_request_flag", DataTypes.STRING()).alias('wav_request_flag'),
+        col('payload').json_value("$.wav_match_flag", DataTypes.STRING()).alias('wav_match_flag'),
+        col('payload').json_value("$.cbd_congestion_fee", DataTypes.DOUBLE()).alias('cbd_congestion_fee'),
+        col('pickup_datetime'),
+        col('dropoff_datetime'),
+        col('request_datetime'),
+        col('on_scene_datetime')
+    )
+
     return table
 
 if __name__ == "__main__":
