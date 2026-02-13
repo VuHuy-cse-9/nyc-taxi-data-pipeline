@@ -22,9 +22,10 @@ def create_sink_table(table: Table):
     # Jsonschema only has these types: 
     # https://github.com/apache/kafka/blob/3.9.0/connect/json/src/main/java/org/apache/kafka/connect/json/JsonSchema.java
 
-    to_unix_timestamp =  lambda col_expr: (F.timestamp_diff(TimePointUnit.SECOND, 
-                    F.lit("1970-01-01 00:00:00").to_timestamp,
-                    col_expr).cast(DataTypes.BIGINT()) * F.lit(1000))
+    def to_unix_timestamp(col_expr):
+        return (F.timestamp_diff(TimePointUnit.SECOND, 
+                        F.lit("1970-01-01 00:00:00").to_timestamp,
+                        col_expr).cast(DataTypes.BIGINT()) * F.lit(1000))
 
     return table.select(
         F.row(
@@ -97,11 +98,11 @@ def main():
 
     # Step 1: Parse data from source
     print("Parsing data from source...")
-    # fhvhv_table = fhvhv_parse_data(t_env)
-    # green_taxi_table = green_taxi_parse_data(t_env)
+    fhvhv_table = fhvhv_parse_data(t_env)
+    green_taxi_table = green_taxi_parse_data(t_env)
     yellow_taxi_table = yellow_taxi_parse_data(t_env)
 
-    yellow_taxi_table.execute().print()
+    fhvhv_table.execute().print()
 
     # Step 2: Preprocess raw data
     fhvhv_table = fhvhv_preprocess(fhvhv_table)
@@ -118,10 +119,10 @@ def main():
     online_traditional_taxi_table = compute_online_feature(traditional_taxi_table)
 
     # Step 4: Union online feature from traditional and fhvh table
-    # online_feature_table = online_fhvh_table.union_all(online_traditional_taxi_table)
+    online_feature_table = online_fhvh_table.union_all(online_traditional_taxi_table)
     
     # Step 5: Write to sink table
-    sink_table = create_sink_table(online_traditional_taxi_table)
+    sink_table = create_sink_table(online_feature_table)
     t_env.execute_sql(STREAM_ONLINE_FEATURE_TABLE_WITH_KAFKA_CONNECTOR.format(
         'online_feature', 'localhost:9092'
     ))

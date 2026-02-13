@@ -210,49 +210,50 @@ services:
   ############################
   #### THIRD PARTY TOOLS #####
   ############################
-  # datasource1:
-  #   image: postgres:15
-  #   container_name: datasource1
-  #   command: ['postgres', '-c', 'wal_level=logical']
-  #   ports:
-  #     - "10001:5432"
-  #   environment:
-  #     - POSTGRES_DB=default
-  #     - POSTGRES_USER=datasource1
-  #     - POSTGRES_PASSWORD=datasource1
-  #   networks:
-  #     - stream_nyc_network
+  datasource1:
+    image: postgres:15
+    container_name: datasource1
+    command: ['postgres', '-c', 'wal_level=logical']
+    ports:
+      - "10001:5432"
+    environment:
+      - POSTGRES_DB=default
+      - POSTGRES_USER=datasource1
+      - POSTGRES_PASSWORD=datasource1
+    networks:
+      - stream_nyc_network
 
 
-  # datasource2:
-  #   image: debezium/example-cassandra:3.1.3.Final
-  #   container_name: datasource2
-  #   build:
-  #     context: ./local/cassandra
-  #   ports:
-  #     - 9042:9042
-  #   networks:
-  #     - stream_nyc_network
-  #   healthcheck:
-  #     test: ["CMD-SHELL", "cqlsh -e 'DESCRIBE KEYSPACES' 127.0.0.1 9042 || exit 1"]
-  #     interval: 30s
-  #     timeout: 10s
-  #     retries: 5
-  #   volumes:
-  #     - cassandra_data:/var/lib/cassandra
-  #   depends_on:
-  #     - zookeeper
-  #     - broker
+  datasource2:
+    image: debezium/example-cassandra:3.1.3.Final
+    container_name: datasource2
+    build:
+      context: ./local/cassandra
+    ports:
+      - 9042:9042
+    networks:
+      - stream_nyc_network
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'DESCRIBE KEYSPACES' 127.0.0.1 9042 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    volumes:
+      - cassandra_data:/var/lib/cassandra
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
 
   datasource3:
-    image: mongodb/mongodb-community-server:latest
+    image: mongodb/mongodb-community-server:7.0.30-ubi9
     container_name: datasource3
     ports:
       - 27017:27017
     command: >
       mongod --dbpath /data/db --replSet rs0 --port 27017
     volumes:
-      - mongodb_1_data:/data/db
+      - mongodb_data:/data/db
       - ./local/mongodb/init-replica-set.js:/scripts/init-replica-set.js
     healthcheck:
       test: echo 'rs.initiated = rs.status().hasOwnProperty("set") && rs.status().members.length > 0; rs.initiated' | mongo --quiet
@@ -263,92 +264,80 @@ services:
     networks:
       - stream_nyc_network
 
-
-  # datasource3-ui:
-  #   image: mongo-express
-  #   container_name: mongo-express
-  #   ports:
-  #     - "8082:8081"
-  #   environment:
-  #     ME_CONFIG_MONGODB_SERVER: datasource3
-  #   restart: unless-stopped
-  #   networks:
-  #     - stream_nyc_network
-
-  # datamart_db:
-  #   container_name: datamart_db
-  #   image: postgres:latest
-  #   ports:
-  #     - '5434:5432' # Access via Thrift protocol
-  #   environment:
-  #     POSTGRES_USER: '${DATAMART_USER}'
-  #     POSTGRES_PASSWORD: '${DATAMART_PASSWORD}'
-  #     POSTGRES_DB: "${DATAMART_DB}"
-  #   networks:
-  #     - stream_nyc_network
-  #   volumes:
-  #     - ./local/volumes/datamart_db:/var/lib/postgresql/data
+  datamart_db:
+    container_name: datamart_db
+    image: postgres:17
+    ports:
+      - '5434:5432' # Access via Thrift protocol
+    environment:
+      POSTGRES_USER: '${DATAMART_USER}'
+      POSTGRES_PASSWORD: '${DATAMART_PASSWORD}'
+      POSTGRES_DB: "${DATAMART_DB}"
+    networks:
+      - stream_nyc_network
+    volumes:
+      - ./local/volumes/datamart_db:/var/lib/postgresql/data
 
 
 
   ########################
   #### HIVE METASTORE ####
   # ########################
-  # trino:
-  #   ports:
-  #     - "10000:8080"
-  #   image: "trinodb/trino:476"
-  #   volumes:
-  #     - ./local/trino/etc:/usr/lib/trino/etc:ro
-  #     - ./local/trino/catalog:/etc/trino/catalog
-  #   depends_on:
-  #     - hive-metastore
-  #   networks:
-  #     - stream_nyc_network
+  trino:
+    ports:
+      - "10000:8080"
+    image: "trinodb/trino:476"
+    volumes:
+      - ./local/trino/etc:/usr/lib/trino/etc:ro
+      - ./local/trino/catalog:/etc/trino/catalog
+    depends_on:
+      - hive-metastore
+    networks:
+      - stream_nyc_network
 
 
-  # metastore_db:
-  #   container_name: hive-metastore-db
-  #   image: postgres:latest
-  #   ports:
-  #     - '5433:5432' # Access via Thrift protocol
-  #   environment:
-  #     POSTGRES_USER: '${METADATA_USER}'
-  #     POSTGRES_PASSWORD: '${METADATA_PASSWORD}'
-  #     POSTGRES_DB: "${METADATA_DB}"
-  #   networks:
-  #     - stream_nyc_network
-  #   volumes:
-  #     - ./local/volumes/metastore_db:/var/lib/postgresql/data
+  metastore_db:
+    container_name: hive-metastore-db
+    image: postgres:17
+    ports:
+      - '5433:5432' # Access via Thrift protocol
+    environment:
+      POSTGRES_USER: '${METADATA_USER}'
+      POSTGRES_PASSWORD: '${METADATA_PASSWORD}'
+      POSTGRES_DB: "${METADATA_DB}"
+    networks:
+      - stream_nyc_network
+    volumes:
+      - ./local/volumes/metastore_db:/var/lib/postgresql/data
 
-  # hive-metastore:
-  #   container_name: hive-metastore
-  #   image: 'starburstdata/hive:3.1.3-e.15'
-  #   ports:
-  #     - '9083:9083' # Access via Thrift protocol
-  #   environment:
-  #     HIVE_METASTORE_DRIVER: org.postgresql.Driver
-  #     HIVE_METASTORE_JDBC_URL: 'jdbc:postgresql://metastore_db:5432/${METADATA_DB}'
-  #     HIVE_METASTORE_USER: '${METADATA_USER}'
-  #     HIVE_METASTORE_PASSWORD: '${METADATA_PASSWORD}'
-  #     REGION: ""
-  #     GOOGLE_CLOUD_KEY_FILE_PATH: ""
-  #     AZURE_ADL_CLIENT_ID: ""
-  #     AZURE_ADL_CREDENTIAL: ""
-  #     AZURE_ADL_REFRESH_URL: ""
-  #     AZURE_ABFS_STORAGE_ACCOUNT: ""
-  #     AZURE_ABFS_ACCESS_KEY: ""
-  #     AZURE_WASB_STORAGE_ACCOUNT: ""
-  #     AZURE_ABFS_OAUTH: ""
-  #     AZURE_ABFS_OAUTH_TOKEN_PROVIDER: ""
-  #     AZURE_ABFS_OAUTH_CLIENT_ID: ""
-  #     AZURE_ABFS_OAUTH_SECRET: ""
-  #     AZURE_ABFS_OAUTH_ENDPOINT: ""
-  #     AZURE_WASB_ACCESS_KEY: ""
-  #   depends_on:
-  #     - metastore_db
-  #   networks:
-  #     - stream_nyc_network
+  hive-metastore:
+    container_name: hive-metastore
+    image: 'starburstdata/hive:3.1.3-e.15'
+    ports:
+      - '9083:9083' # Access via Thrift protocol
+    environment:
+      HIVE_METASTORE_DRIVER: org.postgresql.Driver
+      HIVE_METASTORE_JDBC_URL: 'jdbc:postgresql://metastore_db:5432/${METADATA_DB}'
+      HIVE_METASTORE_USER: '${METADATA_USER}'
+      HIVE_METASTORE_PASSWORD: '${METADATA_PASSWORD}'
+      REGION: ""
+      GOOGLE_CLOUD_KEY_FILE_PATH: ""
+      AZURE_ADL_CLIENT_ID: ""
+      AZURE_ADL_CREDENTIAL: ""
+      AZURE_ADL_REFRESH_URL: ""
+      AZURE_ABFS_STORAGE_ACCOUNT: ""
+      AZURE_ABFS_ACCESS_KEY: ""
+      AZURE_WASB_STORAGE_ACCOUNT: ""
+      AZURE_ABFS_OAUTH: ""
+      AZURE_ABFS_OAUTH_TOKEN_PROVIDER: ""
+      AZURE_ABFS_OAUTH_CLIENT_ID: ""
+      AZURE_ABFS_OAUTH_SECRET: ""
+      AZURE_ABFS_OAUTH_ENDPOINT: ""
+      AZURE_WASB_ACCESS_KEY: ""
+    depends_on:
+      - metastore_db
+    networks:
+      - stream_nyc_network
 
 
 networks:
@@ -358,4 +347,4 @@ networks:
 
 volumes:
   cassandra_data:
-  mongodb_1_data:
+  mongodb_data:

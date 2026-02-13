@@ -14,27 +14,27 @@ WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};
 
 CREATE_TABLE = """
 CREATE TABLE IF NOT EXISTS default.yellow_taxi (
-    id UUID PRIMARY KEY,
-    VendorID INT,
+    id VARCHAR PRIMARY KEY,
+    VendorID VARCHAR,
     tpep_pickup_datetime VARCHAR,
     tpep_dropoff_datetime VARCHAR,
-    passenger_count FLOAT,
-    trip_distance FLOAT,
-    RatecodeID FLOAT,
+    passenger_count VARCHAR,
+    trip_distance VARCHAR,
+    RatecodeID VARCHAR,
     store_and_fwd_flag VARCHAR,
-    PULocationID INT,
-    DOLocationID INT,
-    payment_type INT,
-    fare_amount FLOAT,
-    extra FLOAT,
-    mta_tax FLOAT,
-    tip_amount FLOAT,
-    tolls_amount FLOAT,
-    improvement_surcharge FLOAT,
-    total_amount FLOAT,
-    congestion_surcharge FLOAT,
-    airport_fee FLOAT,
-    cbd_congestion_fee FLOAT
+    PULocationID VARCHAR,
+    DOLocationID VARCHAR,
+    payment_type VARCHAR,
+    fare_amount VARCHAR,
+    extra VARCHAR,
+    mta_tax VARCHAR,
+    tip_amount VARCHAR,
+    tolls_amount VARCHAR,
+    improvement_surcharge VARCHAR,
+    total_amount VARCHAR,
+    congestion_surcharge VARCHAR,
+    airport_fee VARCHAR,
+    cbd_congestion_fee VARCHAR
 ) WITH cdc=true;
 """
 
@@ -76,9 +76,9 @@ def main():
 
     for index, row in yellow_taxi_df.iterrows():
         record = {
-            key: v if pd.notna(v) else None for key, v in row.items()
+            key: str(v) if pd.notna(v) else None for key, v in row.items()
         }
-        record['id'] = uuid4()
+        record['id'] = str(index + 1)
         logger.info(f"Inserting record: {record}")
         session.execute(INSERT_QUERY, record)
 

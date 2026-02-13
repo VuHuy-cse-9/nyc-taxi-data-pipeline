@@ -2,6 +2,7 @@ import os
 from pyflink.table import EnvironmentSettings, TableEnvironment, Table
 from pyflink.table.expressions import col
 import logging
+from pyflink.table.types import DataTypes
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -56,12 +57,52 @@ CREATE TABLE raw_for_hire_vehicle (
 )
 """
 
+source_ddl = """
+CREATE TABLE raw_for_hire_vehicle (
+    payload ROW(
+        after STRING
+    )
+) WITH (
+    'connector' = 'kafka',
+    'topic' = 'raw.datasource3.fhvhv_taxi',
+    'properties.bootstrap.servers' = 'localhost:9092',
+    'properties.group.id' = 'parser-consumer-2-group',
+    'scan.startup.mode' = 'latest-offset',
+    'format' = 'json',
+    'scan.watermark.idle-timeout'='5second'
+)
+"""
+
 def parse_data(t_env: TableEnvironment) -> Table:
     
     # Create table from schema.
     t_env.execute_sql(source_ddl)
 
     table = t_env.from_path("raw_for_hire_vehicle")
+    table = table.select(
+        col('payload').get('after').alias('payload')
+    )
+    
+    table = table.select(
+        col('payload').is_json().alias('is_json'),
+        col('payload').json_query("$._id").alias('payload'),
+    )
+
+    table = table.select(
+        col('payload').is_json(),
+        col('payload').json_query("$.hvfhs_license_num"),
+    ) 
+
+    # table = table.select(
+    #     col('payload').json_query("$.id").alias('id'),
+    #     col('payload').json_query("$.hvfhs_license_num").alias('hvfhs_license_num'),
+    #     col('payload').json_query("$.dispatching_base_num").alias('dispatching_base_num'),
+    #     col('payload').json_query("$.originating_base_num").alias('originating_base_num'),
+    #     col('payload').json_query("$.pulocationid").alias('pulocationid'),
+    #     col('payload').json_query("$.dolocationid").alias('dolocationid'),
+    # )
+
+    table.execute().print()
 
     table = table.select(
         col('payload').get('after').get('id').alias('id'),

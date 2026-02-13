@@ -138,7 +138,7 @@ if __name__ == "__main__":
     # Load sample data from parquet file
     logger.info("Loading sample data...")
 
-    table = parse_avro_data(t_env)
+    table = parse_data(t_env)
 
     logger.info("Inserting data into sink table...")
     table.limit(1000).execute().print()
