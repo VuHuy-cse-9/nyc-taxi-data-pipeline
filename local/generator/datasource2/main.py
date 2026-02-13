@@ -1,8 +1,12 @@
+from socket import create_connection
 from cassandra.cluster import Cluster
 import pandas as pd
 import time
 import logging
-from uuid import uuid4
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -57,18 +61,29 @@ DROP_TABLE = """
 DROP TABLE IF EXISTS default.yellow_taxi;
 """
 
+def init_connection():
+    while True:
+        try:
+            host = os.getenv('DATASOURCE2_HOST', 'datasource2')
+            cluster = Cluster([host], port=9042)
+            session = cluster.connect()
+            logger.info("Connected to Cassandra successfully")
+            return session
+        except Exception as e:
+            logger.error(f"Failed to connect to Cassandra: {e}")
+            logger.info("Retrying in 5 seconds...")
+            time.sleep(5)
+    
 
 def main():
-    cluster = Cluster(["localhost"])
-    session = cluster.connect()
-
+    session = init_connection()
     print("Creating keyspace and table...")
     session.execute(CREATE_KEYSPACE)
     session.execute(DROP_TABLE)
     time.sleep(2)  # Wait for keyspace to be fully created
     session.execute(CREATE_TABLE)
     print("Inserting sample records...")
-    yellow_taxi_df = pd.read_csv("dataset/samples/csv/yellow_taxi.csv")
+    yellow_taxi_df = pd.read_csv("/data/yellow_taxi.csv")
     yellow_taxi_df = yellow_taxi_df.rename(columns={
             'Airport_fee': 'airport_fee',
         })

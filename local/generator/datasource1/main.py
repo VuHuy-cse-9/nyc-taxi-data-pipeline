@@ -5,6 +5,7 @@ from psycopg_pool import AsyncConnectionPool
 import logging
 import asyncio
 import pandas as pd
+import time
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -61,17 +62,18 @@ def initialize_db_connection(min_size=2, max_size=50)->AsyncConnectionPool:
     DB_PASSWORD = os.getenv("DATASOURCE1_PASSWORD", "datasource1")
     db_conn_info = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
     logger.info(f"Connecting to PostgreSQL database at {db_conn_info}")
-    try:
-        pool = AsyncConnectionPool(
-            db_conn_info,
-            min_size=min_size, max_size=max_size,
-            timeout=300,
-        )
-        logger.info(f"PostgreSQL connection pool created with min_size={min_size} and max_size={max_size}")
-    except Exception as e:
-        logger.error(f"Failed to create PostgreSQL connection pool: {e}")
-        return None
-    return pool
+    while True:
+        try:
+            pool = AsyncConnectionPool(
+                db_conn_info,
+                min_size=min_size, max_size=max_size,
+                timeout=300,
+            )
+            logger.info(f"PostgreSQL connection pool created with min_size={min_size} and max_size={max_size}")
+            return pool
+        except Exception as e:
+            logger.error(f"Failed to create PostgreSQL connection pool: {e}")
+            time.sleep(5)
 
 async def create_table(pool: AsyncConnectionPool, create_table_query: str):
     async with pool.connection() as conn:
@@ -112,7 +114,7 @@ async def main():
         await create_table(pool, CREATE_TABLE_QUERY)
 
         # Read green taxi data
-        green_taxi_df = pd.read_csv("dataset/samples/csv/green_taxi.csv")
+        green_taxi_df = pd.read_csv("/data/green_taxi.csv")
         green_taxi_df = green_taxi_df.sort_values(by="lpep_pickup_datetime").reset_index(drop=True)
         for index, row in green_taxi_df.iterrows():
             record = {

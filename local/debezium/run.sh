@@ -26,7 +26,7 @@ case $cmd in
         else
             echo "Registering a new connector from $2"
             # Assign a connector config path such as: kafka_connect_jdbc/configs/connect-timescaledb-sink.json
-            curl -i -X POST -H "Accept:application/json" -H 'Content-Type: application/json' http://localhost:8084/connectors -d @$2
+            curl -i -X POST -H "Accept:application/json" -H 'Content-Type: application/json' http://debezium:8083/connectors -d @$2
         fi
         ;;
     remove_connector)
@@ -37,7 +37,7 @@ case $cmd in
         else
             echo "Removing connector $2"
             # Assign a connector name such as: timescaledb-sink
-            curl -i -X DELETE -H "Accept:application/json" http://localhost:8084/connectors/$2
+            curl -i -X DELETE -H "Accept:application/json" http://debezium:8083/connectors/$2
         fi
         ;;
     *)

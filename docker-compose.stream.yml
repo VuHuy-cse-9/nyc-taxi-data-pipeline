@@ -206,6 +206,16 @@ services:
     networks:
       - stream_nyc_network
 
+  debezium-init:
+    build:
+      context: ./local/debezium
+    container_name: debezium-init
+    depends_on:
+      debezium:
+        condition: service_healthy
+    networks:
+      - stream_nyc_network
+
 
   ############################
   #### THIRD PARTY TOOLS #####
@@ -339,6 +349,49 @@ services:
     networks:
       - stream_nyc_network
 
+
+
+  # GENERATOR
+  datasource1_generator:
+    build:
+      context: ./local/generator/datasource1
+    environment:
+        DATASOURCE1_HOST: datasource1
+        DATASOURCE1_PORT: 5432
+        DATASOURCE1_DB: ${DATASOURCE1_DB}
+        DATASOURCE1_USER: ${DATASOURCE1_USER}
+        DATASOURCE1_PASSWORD: ${DATASOURCE1_PASSWORD}
+    volumes:
+      - ./dataset/samples/csv:/data
+    networks:
+      - stream_nyc_network
+    depends_on:
+      - datasource1
+
+  datasource2_generator:
+    build:
+      context: ./local/generator/datasource2
+    environment:
+        DATASOURCE2_HOST: datasource2
+    volumes:
+      - ./dataset/samples/csv:/data
+    networks:
+      - stream_nyc_network
+    depends_on:
+      - datasource2
+
+  datasource3_generator:
+    build:
+      context: ./local/generator/datasource3
+    environment:
+        DATASOURCE3_HOST: datasource3
+        DATASOURCE3_PORT: 27017
+    volumes:
+      - ./dataset/samples/csv:/data
+    networks:
+      - stream_nyc_network
+    depends_on:
+      - datasource3
 
 networks:
   stream_nyc_network:
