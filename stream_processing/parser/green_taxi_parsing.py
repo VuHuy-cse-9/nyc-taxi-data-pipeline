@@ -91,7 +91,7 @@ CREATE TABLE raw_green_taxi (
 def parse_data(t_env: TableEnvironment) -> Table:
 
     # Create table from schema.
-    t_env.execute_sql(json_source_ddl)
+    t_env.execute_sql(avro_source_ddl)
 
     table = t_env.from_path("raw_green_taxi")
 

@@ -102,8 +102,6 @@ def main():
     green_taxi_table = green_taxi_parse_data(t_env)
     yellow_taxi_table = yellow_taxi_parse_data(t_env)
 
-    fhvhv_table.execute().print()
-
     # Step 2: Preprocess raw data
     fhvhv_table = fhvhv_preprocess(fhvhv_table)
     green_taxi_table = green_taxi_preprocess(green_taxi_table)
