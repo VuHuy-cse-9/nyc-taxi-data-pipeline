@@ -115,8 +115,6 @@ def compute_online_feature(table: Table):
                              window_size=WINDOW_SIZE,
                              slide_every=SLIDE_EVERY)
     
-    print("Demand per zone table schema:")
-
     # Feature 2: Fleet composition per zone
     fleet_composition_per_zone_table = \
         compute_window_count(table, 

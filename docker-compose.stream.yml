@@ -286,7 +286,7 @@ services:
     networks:
       - stream_nyc_network
     volumes:
-      - ./local/volumes/datamart_db:/var/lib/postgresql/data
+      - datamart_db_data:/var/lib/postgresql/data
 
 
 
@@ -401,3 +401,4 @@ networks:
 volumes:
   cassandra_data:
   mongodb_data:
+  datamart_db_data:

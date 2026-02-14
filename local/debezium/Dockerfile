@@ -10,6 +10,7 @@ COPY . .
 
 # Make it executable
 RUN chmod +x /app/run.sh
+RUN chmod +x /app/run-kafka-connect.sh
 RUN chmod +x /app/run-all.sh
 
 # Run script
