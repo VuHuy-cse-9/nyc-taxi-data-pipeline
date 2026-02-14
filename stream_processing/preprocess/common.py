@@ -1,6 +1,6 @@
 from pyflink.table.expressions import col, coalesce, lit, if_then_else, null_of, Expression
 from pyflink.table import DataTypes
-from schemas.models import TripType, PaymentType
+from schemas import TripType, PaymentType
 
 
 def ensure_boolean_type(column: Expression, true_value: str):

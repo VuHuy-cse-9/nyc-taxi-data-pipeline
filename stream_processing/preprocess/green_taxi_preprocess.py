@@ -2,13 +2,13 @@ import os
 from pyflink.table import DataTypes, Table
 from pyflink.table.expressions import col, lit
 from pyflink.table.udf import udf
-from stream_processing.preprocess.common import (
+from preprocess.common import (
     ensure_boolean_type, process_trip_type, process_payment_type
 )
 from pyflink.table.expressions import to_timestamp, timestamp_diff, TimePointUnit
 import pandas as pd
 import logging
-from schemas.models import TaxiType
+from schemas import TaxiType
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

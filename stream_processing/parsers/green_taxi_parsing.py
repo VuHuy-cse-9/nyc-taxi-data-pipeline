@@ -8,45 +8,6 @@ logger = logging.getLogger(__name__)
 
 JARS_PATH = f"{os.getcwd()}/jars"
 
-json_source_ddl = """
-CREATE TABLE raw_green_taxi (
-    id STRING,
-    vendorid INT,
-    lpep_pickup_datetime STRING,
-    lpep_dropoff_datetime STRING,
-    passenger_count INT,
-    trip_distance FLOAT,
-    ratecodeid INT,
-    store_and_fwd_flag STRING,
-    pulocationid INT,
-    dolocationid INT,
-    payment_type INT,
-    fare_amount FLOAT,
-    extra FLOAT,
-    mta_tax FLOAT,
-    tip_amount FLOAT,
-    tolls_amount FLOAT,
-    improvement_surcharge FLOAT,
-    total_amount FLOAT,
-    ehail_fee FLOAT,
-    trip_type INT,
-    congestion_surcharge FLOAT,
-    cbd_congestion_fee FLOAT,
-    pickup_datetime AS TO_TIMESTAMP(lpep_pickup_datetime),
-    dropoff_datetime AS TO_TIMESTAMP(lpep_dropoff_datetime),
-    WATERMARK FOR pickup_datetime AS pickup_datetime - INTERVAL '1' SECOND
-) WITH (
-    'connector' = 'kafka',
-    'topic' = 'raw.public.green_taxi',
-    'properties.bootstrap.servers' = 'localhost:9092',
-    'properties.group.id' = 'flink-consumer-group',
-    'scan.startup.mode' = 'latest-offset',
-    'scan.watermark.idle-timeout'='5second',
-    'format' = 'debezium-json',
-    'debezium-json.schema-include' = 'true'
-)
-"""
-
 
 avro_source_ddl = """
 CREATE TABLE raw_green_taxi (
@@ -75,16 +36,15 @@ CREATE TABLE raw_green_taxi (
     pickup_datetime AS TO_TIMESTAMP(lpep_pickup_datetime),
     dropoff_datetime AS TO_TIMESTAMP(lpep_dropoff_datetime),
     WATERMARK FOR pickup_datetime AS pickup_datetime - INTERVAL '1' SECOND
-
 ) WITH (
     'connector' = 'kafka',
     'topic' = 'raw.public.green_taxi',
-    'properties.bootstrap.servers' = 'localhost:9092',
+    'properties.bootstrap.servers' = 'broker:29092',
     'properties.group.id' = 'flink-consumer-group',
     'scan.startup.mode' = 'latest-offset',
     'scan.watermark.idle-timeout'='5second',
     'format' = 'debezium-avro-confluent',
-    'debezium-avro-confluent.url' = 'http://localhost:8081'
+    'debezium-avro-confluent.url' = 'http://schema-registry:8081'
 )
 """
 

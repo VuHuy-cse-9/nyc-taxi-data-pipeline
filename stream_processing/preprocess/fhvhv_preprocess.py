@@ -1,12 +1,12 @@
 import os
 from pyflink.table import EnvironmentSettings, TableEnvironment, DataTypes, Table, TableDescriptor, Schema
 from pyflink.table.expressions import col, to_timestamp, lit
-from stream_processing.preprocess.common import (
+from preprocess.common import (
     ensure_boolean_type,
 )
 import pandas as pd
 import logging
-from schemas.models import TaxiType
+from schemas import TaxiType
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -49,20 +49,6 @@ if __name__ == "__main__":
         f"file://{JARS_PATH}/flink-connector-kafka-4.0.0-2.0.jar;"
         + f"file://{JARS_PATH}/kafka-clients-3.9.0.jar"
     )
-
-    # t_env.create_temporary_table(
-    #     "raw_for_hire_vehicle",
-    #     TableDescriptor.for_connector("kafka")
-    #     .option("topic", "parsed.public.for_hire_vehicle")
-    #     .option("properties.bootstrap.servers", value="localhost:9092")
-    #     .option("properties.group.id", "parser-consumer-1-group")
-    #     .option("scan.startup.mode", "latest-offset")
-    #     .format("json")
-    #     .schema(Schema.new_builder().from_row_data_type(
-    #         FHVHV_TAXI_SCHEMA
-    #     ).build())
-    #     .build()
-    # )
 
     table = t_env.from_path("raw_for_hire_vehicle")
 

@@ -1,3 +1,3 @@
-from stream_processing.preprocess.fhvhv_preprocess import preprocess as fhvhv_preprocess
-from stream_processing.preprocess.green_taxi_preprocess import preprocess as green_taxi_preprocess
-from stream_processing.preprocess.yellow_taxi_preprocess import preprocess as yellow_taxi_preprocess
+from preprocess.fhvhv_preprocess import preprocess as fhvhv_preprocess
+from preprocess.green_taxi_preprocess import preprocess as green_taxi_preprocess
+from preprocess.yellow_taxi_preprocess import preprocess as yellow_taxi_preprocess

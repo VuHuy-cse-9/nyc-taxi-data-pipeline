@@ -22,7 +22,7 @@ python3 -m local.generator.datasource3_mongodb
 ## Debug
 docker compose -f docker-compose.stream.yml up -d
 python3 -m local.generator.kafka_preprocess_generator
-python3 -m stream_processing.main
+cd stream_processing && python3 main.py
 
 ## Note on MongoDB setup
 Step 1: Start mongodb with docker compose.

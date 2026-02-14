@@ -393,6 +393,41 @@ services:
     depends_on:
       - datasource3
 
+
+  # Flink Job Manager
+  flink-jobmanager:
+    image: flink:2.2.0-java21
+    ports:
+      - "8090:8081"
+    command: jobmanager
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: flink-jobmanager
+        parallelism.default: 8
+    volumes:
+      - ./jars:/opt/flink/usrlib
+    networks:
+      - stream_nyc_network
+
+  flink-taskmanager:
+    image: flink:2.2.0-java21
+    depends_on:
+      - flink-jobmanager
+    command: taskmanager
+    scale: 1
+    volumes:
+      - ./jars:/opt/flink/usrlib
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: flink-jobmanager
+        taskmanager.numberOfTaskSlots: 2
+        taskmanager.memory.flink.size: 2g
+        taskmanager.memory.process.size: 3g
+    networks:
+      - stream_nyc_network
+
 networks:
   stream_nyc_network:
     driver: bridge

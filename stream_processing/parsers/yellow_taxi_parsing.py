@@ -126,7 +126,7 @@ CREATE TABLE raw_yellow_taxi (
 ) WITH (
     'connector' = 'kafka',
     'topic' = 'raw.default.yellow_taxi',
-    'properties.bootstrap.servers' = 'localhost:9092',
+    'properties.bootstrap.servers' = 'broker:29092',
     'properties.group.id' = 'parser-consumer-2-group',
     'scan.startup.mode' = 'latest-offset',
     'format' = 'json',

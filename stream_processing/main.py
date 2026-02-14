@@ -1,22 +1,26 @@
 from pyflink.table import EnvironmentSettings, TableEnvironment, Table
-from stream_processing.parser import (
-    fhvhv_parse_data, green_taxi_parse_data, yellow_taxi_parse_data
-)
-from stream_processing.preprocess import (
+from parsers.fhvhv_parsing import parse_data as fhvhv_parse_data
+from parsers.green_taxi_parsing import parse_data as green_taxi_parse_data
+from parsers.yellow_taxi_parsing import parse_data as yellow_taxi_parse_data
+from preprocess import (
     fhvhv_preprocess, green_taxi_preprocess, yellow_taxi_preprocess
 )
 from pyflink.table.expressions import col, TimePointUnit
 import pyflink.table.expressions as F
 from pyflink.table import DataTypes
 import os
-from schemas.stream.tables import (
+from schemas import (
     STREAM_ONLINE_FEATURE_TABLE_WITH_KAFKA_CONNECTOR, SINK_SCHEMA_TYPE, SINK_PAYLOAD_TYPE
 )
-from stream_processing.online_feat import (
+from online_feat import (
     compute_online_feature
 )
 
-JARS_PATH = f"{os.getcwd()}/jars"
+if not os.path.exists("/opt/flink/usrlib"):
+    JARS_PATH = f"{os.getcwd()}/../jars"
+else:
+    JARS_PATH = "/opt/flink/usrlib"
+
 
 def create_sink_table(table: Table):
     # Jsonschema only has these types: 
@@ -66,13 +70,12 @@ def create_sink_table(table: Table):
         ).cast(SINK_PAYLOAD_TYPE).alias("payload")
     )
 
-
 def main():
     # Set up the environment settings for streaming mode
     print("Setting up Flink environment...")
     t_env = TableEnvironment.create(
         environment_settings=EnvironmentSettings.in_streaming_mode())
-    
+        
     # Setup configuration
     t_env.get_config().set("table.local-time-zone", "America/New_York")
     t_env.get_config().set("taskmanager.memory.network.max", "1gb")
@@ -122,7 +125,7 @@ def main():
     # Step 5: Write to sink table
     sink_table = create_sink_table(online_feature_table)
     t_env.execute_sql(STREAM_ONLINE_FEATURE_TABLE_WITH_KAFKA_CONNECTOR.format(
-        'online_feature', 'localhost:9092'
+        'online_feature', 'broker:29092'
     ))
     sink_table.execute_insert('online_feature').wait()
 

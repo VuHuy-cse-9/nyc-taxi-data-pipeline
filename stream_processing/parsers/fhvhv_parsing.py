@@ -12,54 +12,6 @@ JARS_PATH = f"{os.getcwd()}/jars"
 source_ddl = """
 CREATE TABLE raw_for_hire_vehicle (
     payload ROW(
-        after ROW(
-            id STRING,
-            hvfhs_license_num STRING,
-            dispatching_base_num STRING,
-            originating_base_num STRING,
-            request_datetime STRING,
-            on_scene_datetime STRING,
-            pickup_datetime STRING,
-            dropoff_datetime STRING,
-            pulocationid INT,
-            dolocationid INT,
-            trip_miles FLOAT,
-            trip_time INT,
-            base_passenger_fare FLOAT,
-            tolls FLOAT,
-            bcf FLOAT,
-            sales_tax FLOAT,
-            congestion_surcharge FLOAT,
-            airport_fee FLOAT,
-            tips FLOAT,
-            driver_pay FLOAT,
-            shared_request_flag STRING,
-            shared_match_flag STRING,
-            access_a_ride_flag STRING,
-            wav_request_flag STRING,
-            wav_match_flag STRING,
-            cbd_congestion_fee FLOAT
-        )
-    ),
-    pickup_datetime AS TO_TIMESTAMP(payload.after.pickup_datetime),
-    dropoff_datetime AS TO_TIMESTAMP(payload.after.dropoff_datetime),
-    request_datetime AS TO_TIMESTAMP(payload.after.request_datetime),
-    on_scene_datetime AS TO_TIMESTAMP(payload.after.on_scene_datetime),
-    WATERMARK FOR pickup_datetime AS pickup_datetime - INTERVAL '1' SECOND
-) WITH (
-    'connector' = 'kafka',
-    'topic' = 'raw.public.for_hire_vehicle',
-    'properties.bootstrap.servers' = 'localhost:9092',
-    'properties.group.id' = 'parser-consumer-2-group',
-    'scan.startup.mode' = 'latest-offset',
-    'format' = 'json',
-    'scan.watermark.idle-timeout'='5second'
-)
-"""
-
-source_ddl = """
-CREATE TABLE raw_for_hire_vehicle (
-    payload ROW(
         after STRING
     ),
     data AS payload.after,
@@ -71,7 +23,7 @@ CREATE TABLE raw_for_hire_vehicle (
 ) WITH (
     'connector' = 'kafka',
     'topic' = 'raw.datasource3.fhvhv_taxi',
-    'properties.bootstrap.servers' = 'localhost:9092',
+    'properties.bootstrap.servers' = 'broker:29092',
     'properties.group.id' = 'parser-consumer-2-group',
     'scan.startup.mode' = 'latest-offset',
     'format' = 'json',
