@@ -126,19 +126,13 @@ def compute_online_feature(table: Table):
                              window_size=WINDOW_SIZE,
                              slide_every=SLIDE_EVERY)
 
-    print("Fleet composition per zone table schema:")
-    fleet_composition_per_zone_table.print_schema()
-
-
     # Feature 3: Netflow of vehicle between zones
     netflow_per_zone_table = \
         compute_netflow_per_zone(table, 'pickup_datetime',
                                  window_size=WINDOW_SIZE,
                                  slide_every=SLIDE_EVERY)
     
-    print("Netflow per zone table schema:")
-    netflow_per_zone_table.print_schema()
-    
+
     # Feature 4: Congestion Proxy via Recent Trip Speeds
     speed_features_table = \
         compute_congestion_proxy_via_trip_speed(table,

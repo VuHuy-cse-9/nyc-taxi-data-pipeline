@@ -1,5 +1,5 @@
 import os
-from pyflink.table import EnvironmentSettings, TableEnvironment, Table
+from pyflink.table import EnvironmentSettings, TableEnvironment, Table, DataTypes
 from pyflink.table.expressions import col
 import pandas as pd
 import logging
@@ -144,9 +144,9 @@ def parse_data(t_env: TableEnvironment) -> Table:
     table = table.select(
         col('payload').get('after').get('id').get("value").alias('id'),
         col('payload').get('after').get('vendorid').get("value").alias('vendorid'),
-        col('payload').get('after').get('passenger_count').get("value").alias('passenger_count'),
+        col('payload').get('after').get('passenger_count').get("value").cast(DataTypes.INT()).alias('passenger_count'),
         col('payload').get('after').get('trip_distance').get("value").alias('trip_distance'),
-        col('payload').get('after').get('ratecodeid').get("value").alias('ratecodeid'),
+        col('payload').get('after').get('ratecodeid').get("value").cast(DataTypes.INT()).alias('ratecodeid'),
         col('payload').get('after').get('store_and_fwd_flag').get("value").alias('store_and_fwd_flag'),
         col('payload').get('after').get('pulocationid').get("value").alias('pulocationid'),
         col('payload').get('after').get('dolocationid').get("value").alias('dolocationid'),
