@@ -1,8 +1,14 @@
 from pyspark.sql import DataFrame
 import pyspark.sql.functions as F
 from schemas.models import TripType, TaxiType
-from batch_processing.datasource.common import (
-    transform_ts_to_asia_timezone, ensure_boolean_type, process_payment_type)
+from datawarehouse.common import (
+    transform_ts_to_asia_timezone, 
+    ensure_boolean_type, 
+    process_payment_type,
+    ingest_data, write_to_warehouse
+)
+from configs.spark import create_spark_session
+from configs.config import settings
 
 def process_trip_type(column_name: str):
     return F.when(
@@ -80,3 +86,31 @@ def preprocess(df: DataFrame)->DataFrame:
     )
 
     return df
+
+
+def main():
+    # Create Spark session
+    spark = create_spark_session()
+
+    # Ingest data from local files
+    df = ingest_data(
+        spark, 
+        settings.green_taxi_dataset_name,
+        settings.ingestion_month,
+        settings.ingestion_year
+    )
+
+    # Preprocess datas
+    df = preprocess(df)
+
+    write_to_warehouse(
+        df, 
+        f"{settings.green_taxi_dataset_name}/{settings.ingestion_month:02d}_{settings.ingestion_year}"
+    )
+
+    spark.stop()
+
+    return
+
+if __name__ == "__main__":
+    main()
