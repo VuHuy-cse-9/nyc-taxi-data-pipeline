@@ -1,4 +1,4 @@
-from database.utils import create_minio_client, create_bucket_if_not_exists
+from batch_processing.database.utils import create_minio_client, create_bucket_if_not_exists
 import os
 from dotenv import load_dotenv
 from pyspark.sql import SparkSession, DataFrame

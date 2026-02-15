@@ -1,10 +1,12 @@
 from pyspark.sql import SparkSession, DataFrame
 import os
 from dotenv import load_dotenv
-from datetime import datetime
 import pyspark.sql.functions as F
 
 load_dotenv()
+
+# Datetime
+YEAR, MONTH = 2025, 7
 
 # Minio Configuration
 MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT")
@@ -60,10 +62,6 @@ def sink_data(df: DataFrame):
     return
 
 def main():
-
-    # Datetime
-    YEAR, MONTH = 2025, 7
-
     # Create Spark session
     spark = create_spark_session()
     print("Spark session created successfully.")
@@ -84,7 +82,6 @@ def main():
         (F.col("trip_miles") > 0) & \
         (F.col("fare_amount") > 0)
 
-    df.printSchema()
     df = df.filter(
         F.col("pickup_datetime").isNotNull() &\
         within_july_condition & \
@@ -98,9 +95,6 @@ def main():
         "trip_miles", "pulocationid", "dolocationid",
         "passenger_count", "fare_amount"
     )
-
-    df.printSchema()
-    df.show(5, truncate=False)
 
     sink_data(df)
 

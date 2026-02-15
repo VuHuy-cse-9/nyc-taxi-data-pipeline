@@ -5,6 +5,9 @@ import pyspark.sql.functions as F
 
 load_dotenv()
 
+# Filter Datetime (with Airflow, we wouldn't need this)
+YEAR, MONTH = 2025, 7
+
 # Minio Configuration
 MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT")
 MINIO_ACCESS_KEY=os.getenv("MINIO_ACCESS_KEY")
@@ -45,32 +48,7 @@ def ingest_data(spark: SparkSession):
     df = spark.read.parquet(path_read)
     return df
 
-def sink_data(df: DataFrame):
-    df.write.jdbc(
-        url="jdbc:postgresql://localhost:5434/{}".format(DATAMART_DB),
-        table="public.fhvh_mart",
-        mode="overwrite",
-        properties={
-            "user": DATAMART_USER,
-            "password": DATAMART_PASSWORD,
-            "driver": "org.postgresql.Driver"
-        }
-    )
-    return
-
-def main():
-
-    # Datetime
-    YEAR, MONTH = 2025, 7
-
-    # Create Spark session
-    spark = create_spark_session()
-    print("Spark session created successfully.")
-
-    # Ingest data
-    df = ingest_data(spark)
-    print("Data ingested successfully.")
-
+def filter_data(df: DataFrame):
     # Your data processing logic here
     within_july_condition = \
         (F.year("pickup_datetime") == F.lit(YEAR)) & \
@@ -95,10 +73,35 @@ def main():
         "trip_miles", "pulocationid", "dolocationid",
         "fare_amount"
     )
+    return
 
-    df.printSchema()
-    df.show(5, truncate=False)
+def sink_data(df: DataFrame):
+    df.write.jdbc(
+        url="jdbc:postgresql://localhost:5434/{}".format(DATAMART_DB),
+        table="public.fhvh_mart",
+        mode="overwrite",
+        properties={
+            "user": DATAMART_USER,
+            "password": DATAMART_PASSWORD,
+            "driver": "org.postgresql.Driver"
+        }
+    )
+    return
 
+def main():
+    # Create Spark session
+    spark = create_spark_session()
+    print("Spark session created successfully.")
+
+    # Ingest data
+    df = ingest_data(spark)
+    print("Data ingested successfully.")
+
+    # Filter data
+    df = filter_data(df)
+    print("Data filtered successfully.")
+
+    # Sink data
     sink_data(df)
 
     # Stop the Spark session
