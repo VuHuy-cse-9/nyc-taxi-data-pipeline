@@ -1,6 +1,5 @@
 from pyspark.sql import SparkSession
 from configs.config import settings
-from commons.logging import logger
 
 def create_spark_session() -> SparkSession:
     """

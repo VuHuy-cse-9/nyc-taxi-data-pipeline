@@ -10,6 +10,9 @@ class Config(BaseSettings):
 
     # Lake house
     datalake_bucket: str = "data-lake"
+    datasource_to_download: str = "green" # or "yellow", "fhvhv"
+    ingestion_year: int = 2025
+    ingestion_month: int = 7
 
     # Warehouse
     warehouse_bucket: str = "data-warehouse"
@@ -30,11 +33,7 @@ class Config(BaseSettings):
     datamart_yellow_taxi_table: str = "yellow_taxi_mart"
     datamart_green_taxi_table: str = "green_taxi_mart"
     datamart_fhvhv_table: str = "fhvhv_mart"
-
-    # Ingestion time
-    ingestion_year: int = 2025
-    ingestion_month: int = 7
-
+    
     # Spark configuration
     spark_master: str = "spark://localhost:7077"
     spark_app_name: str = "BatchProcessingApp"

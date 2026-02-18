@@ -8,3 +8,11 @@ DATA2MINIO_DIR = {
     'yellow_taxi_dictionary': 'nyc_taxi_dataset/metadata/yellow_taxi_dictionary.csv',
     'fhvhv_dictionary': 'nyc_taxi_dataset/metadata/High_Volume_FHV_trip_data_dictionary.csv'
 }
+
+NYC_TAXI_BASE_URL = "https://d37ci6vzurychx.cloudfront.net/trip-data"
+
+SOURCE2MINIO_FOLDER = {
+    "green": "green_taxi",
+    "yellow": "yellow_taxi",
+    "fhvhv": "for_hire_vehicle"
+}
