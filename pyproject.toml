@@ -19,7 +19,7 @@ dependencies = [
 # Optional dependencies
 [project.optional-dependencies]
 spark = [
-    "pyspark>=4.0.0"
+    "pyspark==4.0.2"
 ]
 
 flink = [

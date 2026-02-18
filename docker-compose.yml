@@ -91,7 +91,7 @@ services:
     container_name: datamart_db
     image: postgres:17
     ports:
-      - '5434:5432' # Access via Thrift protocol
+      - '5434:5434' # Access via Thrift protocol
     environment:
       POSTGRES_USER: '${DATAMART_USER}'
       POSTGRES_PASSWORD: '${DATAMART_PASSWORD}'
@@ -100,6 +100,46 @@ services:
       - nyc_network
     volumes:
       - ./local/volumes/datamart_db:/var/lib/postgresql/data
+    command: ["postgres", "-c", "port=5434"]
+
+  spark-master:
+    build:
+      context: local/spark
+      dockerfile: Dockerfile
+    ports:
+      - "7077:7077"
+      - "8080:8080"
+    environment:
+      MODE: "master"
+      MINIO_ENDPOINT: "minio:9000"
+      MINIO_ACCESS_KEY: "${MINIO_ACCESS_KEY}"
+      MINIO_SECRET_KEY: "${MINIO_SECRET_KEY}"
+      METADATA_URI: "thrift://hive-metastore:9083"
+      DATAMART_ENDPOINT: "datamart_db"
+    networks:
+      - nyc_network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+
+  spark-worker:
+    build:
+      context: local/spark
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"
+    environment:
+      MODE: "worker"
+      MINIO_ACCESS_KEY: "${MINIO_ACCESS_KEY}"
+      MINIO_SECRET_KEY: "${MINIO_SECRET_KEY}"
+      METADATA_URI: "thrift://hive-metastore:9083"
+      DATAMART_ENDPOINT: "datamart_db"
+    networks:
+      - nyc_network
+    depends_on:
+      - spark-master
+    extra_hosts:
+      - "host.docker.internal:host-gateway" 
 
 networks:
   nyc_network:

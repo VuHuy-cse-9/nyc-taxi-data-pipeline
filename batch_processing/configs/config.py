@@ -3,9 +3,9 @@ from pydantic_settings import BaseSettings
 
 class Config(BaseSettings):
     # MinIO configuration
-    minio_endpoint: str
-    minio_access_key: str
-    minio_secret_key: str
+    minio_endpoint: str = "localhost:9000"
+    minio_access_key: str = "minio_access_key"
+    minio_secret_key: str = "minio_secret_key"
     minio_secure: bool = False  # Set to True if using HTTPS
 
     # Lake house
@@ -13,7 +13,6 @@ class Config(BaseSettings):
 
     # Warehouse
     warehouse_bucket: str = "data-warehouse"
-    metadata_uri: str = "thrift://localhost:9083"
 
     # Dataset name
     dataset_name: str = "nyc_taxi_dataset"
@@ -37,7 +36,7 @@ class Config(BaseSettings):
     ingestion_month: int = 7
 
     # Spark configuration
-    spark_master: str = "local[*]"
+    spark_master: str = "spark://localhost:7077"
     spark_app_name: str = "BatchProcessingApp"
 
     class Config:
