@@ -6,7 +6,7 @@ def create_spark_session() -> SparkSession:
     """
     Create a Spark session with the specified configuration.
     """
-    JAR_DIR = "../jars"
+    JAR_DIR = "jars"
     jars = f"{JAR_DIR}/hadoop-aws-3.4.1.jar,{JAR_DIR}/bundle-2.32.24.jar,{JAR_DIR}/postgresql-42.7.7.jar"
     builder: SparkSession.Builder = SparkSession.builder\
         .appName(settings.spark_app_name) \
