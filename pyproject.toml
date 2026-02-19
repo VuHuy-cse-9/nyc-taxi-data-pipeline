@@ -14,19 +14,19 @@ dependencies = [
     "python-dotenv>=1.1.1",
     "pymongo>=4.4.1",
     "pydantic-settings>=2.7.1",
-    "apache-airflow-providers-docker>=4.4.0",
+    "psycopg[binary,pool]>=3.2.9"
 ]
 
 # Optional dependencies
 [project.optional-dependencies]
 spark = [
-    "pyspark==4.0.2"
+    "pyspark==4.0.2",
+    "apache-airflow==3.0.6",
+    "apache-airflow-providers-docker>=4.4.0"
 ]
 
 flink = [
-    "apache-flink>=2.1.0",
-    "psycopg-binary>=3.2.9",
-    "psycopg[pool]>=3.2.9"
+    "apache-flink>=2.1.0"
 ]
 
 [tool.uv]
