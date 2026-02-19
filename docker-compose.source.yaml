@@ -1,0 +1,104 @@
+networks:
+  doan_nyc_network:
+    external: true
+
+services:
+  datasource1:
+    image: postgres:15
+    container_name: datasource1
+    command: ['postgres', '-c', 'wal_level=logical']
+    ports:
+      - "10001:5432"
+    environment:
+      - POSTGRES_DB=default
+      - POSTGRES_USER=datasource1
+      - POSTGRES_PASSWORD=datasource1
+    networks:
+      - doan_nyc_network
+
+
+  datasource2:
+    image: debezium/example-cassandra:3.1.3.Final
+    container_name: datasource2
+    build:
+      context: ./local/cassandra
+    ports:
+      - 9042:9042
+    networks:
+      - doan_nyc_network
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'DESCRIBE KEYSPACES' 127.0.0.1 9042 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    volumes:
+      - cassandra_data:/var/lib/cassandra
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+
+  datasource3:
+    image: mongodb/mongodb-community-server:7.0.30-ubi9
+    container_name: datasource3
+    ports:
+      - 27017:27017
+    command: >
+      mongod --dbpath /data/db --replSet rs0 --port 27017
+    volumes:
+      - mongodb_data:/data/db
+      - ./local/mongodb/init-replica-set.js:/scripts/init-replica-set.js
+    healthcheck:
+      test: echo 'rs.initiated = rs.status().hasOwnProperty("set") && rs.status().members.length > 0; rs.initiated' | mongo --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    networks:
+      - doan_nyc_network
+
+  # GENERATOR
+  datasource1_generator:
+    build:
+      context: ./local/generator/datasource1
+    environment:
+        DATASOURCE1_HOST: datasource1
+        DATASOURCE1_PORT: 5432
+        DATASOURCE1_DB: ${DATASOURCE1_DB}
+        DATASOURCE1_USER: ${DATASOURCE1_USER}
+        DATASOURCE1_PASSWORD: ${DATASOURCE1_PASSWORD}
+    volumes:
+      - ./dataset/samples/csv:/data
+    networks:
+      - doan_nyc_network
+    depends_on:
+      - datasource1
+
+  datasource2_generator:
+    build:
+      context: ./local/generator/datasource2
+    environment:
+        DATASOURCE2_HOST: datasource2
+    volumes:
+      - ./dataset/samples/csv:/data
+    networks:
+      - doan_nyc_network
+    depends_on:
+      - datasource2
+
+  datasource3_generator:
+    build:
+      context: ./local/generator/datasource3
+    environment:
+        DATASOURCE3_HOST: datasource3
+        DATASOURCE3_PORT: 27017
+    volumes:
+      - ./dataset/samples/csv:/data
+    networks:
+      - doan_nyc_network
+    depends_on:
+      - datasource3
+
+volumes:
+  cassandra_data:
+  mongodb_data:

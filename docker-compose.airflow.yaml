@@ -52,7 +52,7 @@ x-airflow-common:
   image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:3.1.7}
   # build: .
   env_file:
-    - ${ENV_FILE_PATH:-.env}
+    - ${ENV_FILE_PATH:airflow/.env}
   networks:
     - doan_nyc_network
   environment:
@@ -89,6 +89,10 @@ x-airflow-common:
       condition: service_healthy
     postgres:
       condition: service_healthy
+
+networks:
+  doan_nyc_network:
+    external: true
 
 services:
   postgres:
@@ -342,7 +346,3 @@ services:
 
 volumes:
   postgres-db-volume:
-
-networks:
-  doan_nyc_network:
-    external: true

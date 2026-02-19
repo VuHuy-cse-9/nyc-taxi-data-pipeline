@@ -1,6 +1,10 @@
+networks:
+  nyc_network:
+    driver: bridge
+
 services:
   ####################
-  #### LAKE HOUSE ####
+  #### DATA LAYER ####
   ####################
   minio:
     image: minio/minio:RELEASE.2025-01-20T14-49-07Z-cpuv1
@@ -17,9 +21,37 @@ services:
     networks:
       - nyc_network
 
-  ########################
-  #### HIVE METASTORE ####
-  ########################
+
+  datamart_db:
+    container_name: datamart_db
+    image: postgres:17
+    ports:
+      - '5434:5434' # Access via Thrift protocol
+    environment:
+      POSTGRES_USER: '${DATAMART_USER}'
+      POSTGRES_PASSWORD: '${DATAMART_PASSWORD}'
+      POSTGRES_DB: "${DATAMART_DB}"
+    networks:
+      - nyc_network
+    volumes:
+      - ./local/volumes/datamart_db:/var/lib/postgresql/data
+    command: ["postgres", "-c", "port=5434"]
+
+  ################################
+  ######## COMPUTE LAYER #########
+  ################################
+  trino:
+    ports:
+      - "10000:8080"
+    image: "trinodb/trino:476"
+    volumes:
+      - ./local/trino/etc:/usr/lib/trino/etc:ro
+      - ./local/trino/catalog:/etc/trino/catalog
+    depends_on:
+      - hive-metastore
+    networks:
+      - nyc_network
+
   metastore_db:
     container_name: hive-metastore-db
     image: postgres:17
@@ -70,37 +102,7 @@ services:
     depends_on:
       - metastore_db
     networks:
-      - nyc_network
-
-  ############################
-  #### TRINO QUERY ENGINE ####
-  ############################
-  trino:
-    ports:
-      - "10000:8080"
-    image: "trinodb/trino:476"
-    volumes:
-      - ./local/trino/etc:/usr/lib/trino/etc:ro
-      - ./local/trino/catalog:/etc/trino/catalog
-    depends_on:
-      - hive-metastore
-    networks:
-      - nyc_network
-
-  datamart_db:
-    container_name: datamart_db
-    image: postgres:17
-    ports:
-      - '5434:5434' # Access via Thrift protocol
-    environment:
-      POSTGRES_USER: '${DATAMART_USER}'
-      POSTGRES_PASSWORD: '${DATAMART_PASSWORD}'
-      POSTGRES_DB: "${DATAMART_DB}"
-    networks:
-      - nyc_network
-    volumes:
-      - ./local/volumes/datamart_db:/var/lib/postgresql/data
-    command: ["postgres", "-c", "port=5434"]
+      - nyc_network 
 
   spark-master:
     build:
@@ -121,7 +123,6 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
-
   spark-worker:
     build:
       context: local/spark
@@ -140,7 +141,3 @@ services:
       - spark-master
     extra_hosts:
       - "host.docker.internal:host-gateway" 
-
-networks:
-  nyc_network:
-    driver: bridge
