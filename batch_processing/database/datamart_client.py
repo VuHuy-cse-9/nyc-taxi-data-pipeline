@@ -1,4 +1,3 @@
-import argparse
 from datetime import date
 import psycopg
 from configs.config import settings
@@ -6,7 +5,7 @@ from configs.config import settings
 SOURCE2TABLE = {
     "yellow": settings.datamart_yellow_taxi_table,
     "green": settings.datamart_green_taxi_table,
-    "fhvhv": settings.fhvhv_dataset_name
+    "fhvhv": settings.datamart_fhvhv_table
 }
 
 def partition_exists(conn, table_name):
