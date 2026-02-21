@@ -3,6 +3,13 @@
 ![architecture](assets/architecture.jpg)
 Figure 1: Architecture of the system.
 
+## Table of Contents
+- [Section 1: Dataset](#section-1-dataset)
+- [Section 2: Architecture Overview](#section-2-architecture-overview)
+- [Section 3: Offline Pipeline](#section-3-offline-pipeline)
+- [Section 4: Online Pipeline](#section-4-online-pipeline)
+- [Section 5: Conclusion](#section-5-conclusion)
+
 ## Section 1: Dataset
 
 ### a) Overview
@@ -609,6 +616,9 @@ Finally, given a online-feature computed by Flink, I configure Kafka Sink Connec
   }
 }
 ```
+
+## Section 5: Conclusion
+In this project, we have designed and implemented a data pipeline that can handle both offline and online data processing for the NYC Taxi dataset. The system is designed to be scalable, maintainable, and efficient, leveraging modern technologies such as Apache Spark for batch processing and Apache Flink for stream processing.
 
 ## Reference
 1. [NYC Taxi Dataset](https://www1.nyc.gov/site/tlc/about/tlc-trip-record-data.page)
