@@ -271,7 +271,7 @@ If it starts successfully, you could visualize spark monitoring dashboard at `lo
 
 Figure 7: Spark monitoring dashboard.
 
-*(*) Note: For the development purpose, I only use a single worker. Feel free to add more workers if you need.*
+*(\*) Note: For the development purpose, I only use a single worker. Feel free to add more workers if you need.*
 
 🚃 **Implementation details**
 
@@ -496,7 +496,7 @@ To visualize Cassandra, one option is to use Trino. If you have start Trino by r
 
 Figure 13: Cassandra visualization through Trino.
 
-*(*) Note: To make Trino know the connection information to Cassandra, I create a config file at `local/trino/catalog/cassandra.properties` and mount it into `/etc/trino/catalog`.*
+*(\*) Note: To make Trino know the connection information to Cassandra, I create a config file at `local/trino/catalog/cassandra.properties` and mount it into `/etc/trino/catalog`.*
 
 #### 🏭 Data Generator
 
