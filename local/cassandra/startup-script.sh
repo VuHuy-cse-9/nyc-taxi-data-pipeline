@@ -9,9 +9,6 @@ do
   sleep 1
 done;
 
-# Create sample table
-# cqlsh -f $DEBEZIUM_HOME/inventory.cql
-
 # Run Cassandra Connector
 java -Dlog4j.debug \
      -Dlog4j.configuration=file:$DEBEZIUM_HOME/log4j.properties \

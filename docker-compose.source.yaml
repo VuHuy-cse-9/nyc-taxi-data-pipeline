@@ -18,7 +18,7 @@ services:
 
 
   datasource2:
-    image: debezium/example-cassandra:3.1.3.Final
+    image: cassandra-nyc:1.0.0
     container_name: datasource2
     build:
       context: ./local/cassandra
@@ -33,10 +33,6 @@ services:
       retries: 5
     volumes:
       - cassandra_data:/var/lib/cassandra
-    depends_on:
-      - zookeeper
-      - broker
-      - schema-registry
 
   datasource3:
     image: mongodb/mongodb-community-server:7.0.30-ubi9
@@ -44,7 +40,7 @@ services:
     ports:
       - 27017:27017
     command: >
-      mongod --dbpath /data/db --replSet rs0 --port 27017
+      mongod --dbpath /data/db --replSet rs0 --port 27017 --bind_ip_all
     volumes:
       - mongodb_data:/data/db
       - ./local/mongodb/init-replica-set.js:/scripts/init-replica-set.js

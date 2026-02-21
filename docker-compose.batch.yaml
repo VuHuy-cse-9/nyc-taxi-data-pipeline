@@ -127,8 +127,6 @@ services:
     build:
       context: local/spark
       dockerfile: Dockerfile
-    ports:
-      - "8081:8081"
     environment:
       MODE: "worker"
       MINIO_ACCESS_KEY: "${MINIO_ACCESS_KEY}"

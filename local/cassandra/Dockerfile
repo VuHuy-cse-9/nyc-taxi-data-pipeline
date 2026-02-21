@@ -16,7 +16,7 @@ RUN curl -fSL -o $DEBEZIUM_HOME/debezium-connector-cassandra.jar \
 # COPY debezium-connector-cassandra-4-2.7.4.Final-jar-with-dependencies.jar $DEBEZIUM_HOME/debezium-connector-cassandra.jar
 
 
-COPY log4j.properties config.properties inventory.cql $DEBEZIUM_HOME/
+COPY log4j.properties config.properties $DEBEZIUM_HOME/
 COPY startup-script.sh $DEBEZIUM_HOME/startup-script.sh
 
 RUN chmod +x $DEBEZIUM_HOME/startup-script.sh &&\

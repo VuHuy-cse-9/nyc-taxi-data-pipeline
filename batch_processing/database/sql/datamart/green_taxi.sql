@@ -8,12 +8,6 @@ CREATE TABLE green_taxi_mart (
     fare_amount NUMERIC(10, 2)
 ) PARTITION BY RANGE (pickup_datetime);
 
-CREATE TABLE green_taxi_mart_2025_07 PARTITION OF green_taxi_mart
-    FOR VALUES FROM ('2025-07-01') TO ('2025-08-01');
-
--- Optional: Add indexes on partitions (recommended for performance)
-CREATE INDEX idx_green_taxi_mart_2025_07_pickup ON green_taxi_mart_2025_07 (pickup_datetime);
-
 -- Optional: If you want a default partition for out-of-range data (e.g., future dates beyond planned partitions)
 CREATE TABLE green_taxi_mart_default PARTITION OF green_taxi_mart
     DEFAULT;
