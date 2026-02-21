@@ -2,7 +2,8 @@
 __pycache__
 **/__pycache__
 dataset
-jars
 artifacts
 local/volumes
 airflow/logs
+local/spark/jars/bundle-2.32.24.jar
+batch_processing/jars/bundle-2.32.24.jar

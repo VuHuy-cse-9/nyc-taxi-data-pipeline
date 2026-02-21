@@ -108,6 +108,7 @@ Business-targeted users (e.g Data Analyst Team) could use their Visualization to
 This component aims at streaming data (which constantly inserts into Source databases), parsing, transforming, computing online features in real-time, then inserting it into online feature table within Data Mart.
 
 ![image.png](assets/section2/image3.png)
+Figure 4: Overview of online data pipeline.
 
 Specifically, given records constantly inserted into source databases (PostgreSQL, MongoDB, and Cassandra), we use Debezium - a platform for change data capture - to capture recent new record with its content and insert into Raw-x-topic.
 
@@ -168,7 +169,7 @@ The whole process would result like in the figure below:
 
 ![Figure: Minio object storage for data lake and data warehouse.](assets/section3/image1.png)
 
-Figure: Minio object storage for data lake and data warehouse.
+Figure 5: Minio object storage for data lake and data warehouse.
 
 #### 🌿 Data Mart
 
@@ -219,7 +220,7 @@ c. Other
 
 There would be a table for online feature. This table would be automatically created by Kafka connector. For illustration purpose, I add the table schemas for online feature table below:
 
-TODO: Add table sql for online feature table.
+<!-- TODO: Add table sql for online feature table. -->
 
 #### 🌿 Trino Query Engine
 
@@ -239,7 +240,7 @@ Currently, I host Trino in a standalone mode (single app shared both as Trino ma
 
 Finally, you could verify Trino via database connection software such as DBeaver.
 
-- TODO: Currently, I couldn’t visualize our parquet file via Trino. To visualize it, it seems that we need to write sql that define table schemas, path to parquet for Trino.
+<!-- - TODO: Currently, I couldn’t visualize our parquet file via Trino. To visualize it, it seems that we need to write sql that define table schemas, path to parquet for Trino. Where script I have forgotten -->
 
 ### 🌿 Spark Cluster
 
@@ -247,7 +248,7 @@ Finally, you could verify Trino via database connection software such as DBeaver
 
 ![Figure: Spark cluster component.](assets/section3/image2.png)
 
-Figure: Spark cluster component.
+Figure 6: Spark cluster component.
 
 Spark is a distributed compute engine maintained by Apache. In our system, I host a spark cluster handle computation from tasks that are submitted by Airflow.
 
@@ -261,7 +262,7 @@ If it starts successfully, you could visualize spark monitoring dashboard at `lo
 
 ![Figure: Spark monitoring dashboard.](assets/section3/image3.png)
 
-Figure: Spark monitoring dashboard.
+Figure 7: Spark monitoring dashboard.
 
 *(*) Note: For the development purpose, I only use a single worker. Feel free to add more workers if you need.*
 
@@ -334,7 +335,7 @@ If you run Airflow successfully, you could access Airflow at [`localhost:8085`](
 
 ![Figure: Airflow’s DAG Dashboard](assets/section3/image4.png)
 
-Figure: Airflow’s DAG Dashboard
+Figure 8: Airflow’s DAG Dashboard
 
 Since task within pipeline bases on 🐋 **DockerOperator**, please build the docker image so that it can use by run the command:
 
@@ -347,7 +348,7 @@ To run pipeline for a source for a whole 2025, click a dag (e.g green_taxi_dag),
 
 ![Figure: Airflow backfilling for Green Taxi DAG in 2025.](assets/section3/image5.png)
 
-Figure: Airflow backfilling for Green Taxi DAG in 2025.
+Figure 9: Airflow backfilling for Green Taxi DAG in 2025.
 
 After that, Airflow would schedule and run backfill for every month in 2025 for Green Source.
 
@@ -365,7 +366,7 @@ First of all, I create a pipeline for each data source for several reasons. Comp
 
 ![Figure: Splitting pipeline into multiple steps helps us design a complex pipeline.](assets/section3/image6.png)
 
-Figure: Splitting pipeline into multiple steps helps us design a complex pipeline.
+Figure 10: Splitting pipeline into multiple steps helps us design a complex pipeline.
 
 Second, I consider whether I should merge tasks to single unified one, or split them for clarity. Compared to merging, I found that splitting them by its responsibility bringing us several benefits:
 
@@ -460,6 +461,7 @@ mongosh
 Then, copy the content within `local/mongodb/init-replica-set.js` , and past into mongosh terminal.  The result may like this:
 
 ![Screenshot 2026-02-21 at 10.07.37.png](assets/section4/image1.png)
+Figure 11: MongoDB replica set configuration.
 
 In the last line, we can see: `rs0` named of the replication set, and there is a single node in this set (Primary node, accept both write, read). `datasource3:27017` means this member only accept domain name `datasource3` (for other container connect to).
 
@@ -473,7 +475,7 @@ After that, you can connect to MongoDB database:
 
 ![Figure: Visualization of MongoDB.](assets/section4/image2.png)
 
-Figure: Visualization of MongoDB.
+Figure 12: Visualization of MongoDB.
 
 👁️ **Cassandra**:
 
@@ -485,7 +487,7 @@ To visualize Cassandra, one option is to use Trino. If you have start Trino by r
 
 ![Figure: Cassandra visualization through Trino.](assets/section4/image3.png)
 
-Figure: Cassandra visualization through Trino.
+Figure 13: Cassandra visualization through Trino.
 
 *(*) Note: To make Trino know the connection information to Cassandra, I create a config file at `local/trino/catalog/cassandra.properties` and mount it into `/etc/trino/catalog`.*
 
@@ -561,7 +563,7 @@ In our system, we implement the computation workflow for each data source illust
 
 ![Figure: Computation workflow of Flink.](assets/section4/image4.png)
 
-Figure: Computation workflow of Flink.
+Figure 14: Computation workflow of Flink.
 
 1. **Parser**: For each data source within raw-x-topic, a parser that parse raw data extract from CDC into our desired format. For example, Avro parser for Green Taxi (PostgreSQL), String parser for Yellow Taxi (MongoDB), and Json parser for For-hire-vehicle (Cassandra). We also setup Watermark for data source to enable Window Aggregation operation.
 2. Preprocessor: After parsing data into write format, we then preprocess each data source such as 1) Fill in missing values, 2) format data value (e.g index 1, 2 to meaningful string value), 2) Drop unused columns.
@@ -573,11 +575,12 @@ The implementation details is listed at `stream_processing` .
 
 ![Figure: Flink monitoring dashboard.](assets/section4/image6.png)
 
-Figure: Flink Monitoring Dashboard.
+Figure 15: Flink Monitoring Dashboard.
 
 #### 🏠 Flink cluster
 
 ![image.png](assets/section4/image5.png)
+Figure 16: Flink cluster architecture.
 
 I host a Flink cluster, specified at `docker-compose.stream.yaml` , service `flink-jobmanager` and `flink-taskmanager`  both shared image `flink:2.2.0-java21`. 
 
