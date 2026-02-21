@@ -15,7 +15,6 @@ dependencies = [
     "pymongo>=4.4.1",
     "pydantic-settings>=2.7.1",
     "psycopg[binary,pool]>=3.2.9",
-    "feast[s3]>=0.47.0",
     "s3fs>=2025.10.0",
     "pyarrow>=16.1.0",
 ]
@@ -28,6 +27,11 @@ spark = [
     "apache-airflow-providers-docker>=4.4.0"
 ]
 
+feast = [
+    "feast[s3,redis]>=0.47.0",
+    "sqlalchemy>=2.0"
+]
+
 flink = [
     "apache-flink>=2.1.0"
 ]
@@ -37,5 +41,6 @@ conflicts = [
     [
       { extra = "spark" },
       { extra = "flink" },
+      { extra = "feast" }
     ],
 ]

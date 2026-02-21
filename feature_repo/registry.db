@@ -1,53 +1,0 @@
-
-?
-
-__dummy"
-__dummy_idJnyc_taxi
-û€æÌ à³Æû€æÌ à³Æ
-E
-%
-pickup_zone"pulocationidJnyc_taxi
-û€æÌØè¸Æû€æÌØè¸Æ1"$21c23321-7b5e-426d-88e4-6f737c984cf0*¨„æÌÀ×©²2ó
-Ò
-green_taxi_featuresnyc_taxipickup_zone"
-
-trip_miles"
-passenger_count"
-fare_amount2€ç„:Òpickup_datetime‚Á
-¾{"name": "green_taxi_postgres_source", "query": "\n        SELECT\n            pickup_datetime,\n            dropoff_datetime,\n            trip_miles,\n            pulocationid,\n            dolocationid,\n            passenger_count,\n            fare_amount\n        FROM public.green_taxi_mart\n    ", "table": ""}ŠZfeast.infra.offline_stores.contrib.postgres_offline_store.postgres_source.PostgreSQLSource¢green_taxi_postgres_source@b
-pulocationid
-û€æÌ˜›½Æû€æÌ˜›½Æ2ÿ
-Ş
-fhvhv_featuresnyc_taxipickup_zone"
-
-trip_miles"
-passenger_count"
-fare_amount2€ç„:ãrequest_datetime‚Ö
-Ó{"name": "fhvhv_postgres_source", "query": "\n        SELECT\n            request_datetime,\n            pickup_datetime,\n            dropoff_datetime,\n            trip_miles,\n            pulocationid,\n            dolocationid,\n            passenger_count,\n            fare_amount\n        FROM public.fhvhv_mart\n    ", "table": ""}ŠZfeast.infra.offline_stores.contrib.postgres_offline_store.postgres_source.PostgreSQLSource¢fhvhv_postgres_source@b
-pulocationid
-¨„æÌ¸ï”²¨„æÌ¸ï”²2÷
-Ö
-yellow_taxi_featuresnyc_taxipickup_zone"
-
-trip_miles"
-passenger_count"
-fare_amount2€ç„:Õpickup_datetime‚Ã
-À{"name": "yellow_taxi_postgres_source", "query": "\n        SELECT\n            pickup_datetime,\n            dropoff_datetime,\n            trip_miles,\n            pulocationid,\n            dolocationid,\n            passenger_count,\n            fare_amount\n        FROM public.yellow_taxi_mart\n    ", "table": ""}ŠZfeast.infra.offline_stores.contrib.postgres_offline_store.postgres_source.PostgreSQLSource¢yellow_taxi_postgres_source@b
-pulocationid
-¨„æÌ˜µ²¨„æÌ˜µ²R»
-
-,feast.infra.online_stores.sqlite.SqliteTable"]
-B/Users/huyvu/Program/FSDS/MLOPs2/doan/feature_repo/online_store.dbnyc_taxi_fhvhv_features
-’
-,feast.infra.online_stores.sqlite.SqliteTable"b
-B/Users/huyvu/Program/FSDS/MLOPs2/doan/feature_repo/online_store.dbnyc_taxi_green_taxi_features
-“
-,feast.infra.online_stores.sqlite.SqliteTable"c
-B/Users/huyvu/Program/FSDS/MLOPs2/doan/feature_repo/online_store.dbnyc_taxi_yellow_taxi_featuresbİpickup_datetime‚Á
-¾{"name": "green_taxi_postgres_source", "query": "\n        SELECT\n            pickup_datetime,\n            dropoff_datetime,\n            trip_miles,\n            pulocationid,\n            dolocationid,\n            passenger_count,\n            fare_amount\n        FROM public.green_taxi_mart\n    ", "table": ""}ŠZfeast.infra.offline_stores.contrib.postgres_offline_store.postgres_source.PostgreSQLSource¢green_taxi_postgres_sourceªnyc_taxibàpickup_datetime‚Ã
-À{"name": "yellow_taxi_postgres_source", "query": "\n        SELECT\n            pickup_datetime,\n            dropoff_datetime,\n            trip_miles,\n            pulocationid,\n            dolocationid,\n            passenger_count,\n            fare_amount\n        FROM public.yellow_taxi_mart\n    ", "table": ""}ŠZfeast.infra.offline_stores.contrib.postgres_offline_store.postgres_source.PostgreSQLSource¢yellow_taxi_postgres_sourceªnyc_taxibîrequest_datetime‚Ö
-Ó{"name": "fhvhv_postgres_source", "query": "\n        SELECT\n            request_datetime,\n            pickup_datetime,\n            dropoff_datetime,\n            trip_miles,\n            pulocationid,\n            dolocationid,\n            passenger_count,\n            fare_amount\n        FROM public.fhvhv_mart\n    ", "table": ""}ŠZfeast.infra.offline_stores.contrib.postgres_offline_store.postgres_source.PostgreSQLSource¢fhvhv_postgres_sourceªnyc_taxiŠ(
-
-
-nyc_taxi
-û€æÌ°¦È_û€æÌ°¦È_
