@@ -1,0 +1,16 @@
+project: nyc_taxi
+registry: registry.db
+provider: local
+
+offline_store:
+  type: postgres
+  host: localhost
+  port: 5434
+  database: datamart
+  user: datamart_user
+  password: datamart_password
+  db_schema: public
+
+online_store:
+  type: sqlite
+  path: online_store.db
