@@ -1,6 +1,6 @@
 # NYC Taxi Data Platform
 
-![architecture](assets/architecture.jpg)
+![architecture](assets/architecture.png)
 Figure 1: Architecture of the system.
 
 ## Table of Contents
@@ -419,6 +419,17 @@ For each pipeline, I create 4 tasks:
 | run_create_partition_X | We create a partition for schedule month for that source in data mart. | DockerOperator |
 | run_datamart_X | Run Spark code that read data from Minio data-warehouse bucket, compute and insert into created partition in data mart. | DockerOperator |
 
+
+### 📔 Feast
+Feast (Feature Store) is a system that manages, serves, and version-controls machine learning features. It provides a unified interface to:
+- Discover available features
+- Retrieve historical features for training
+- Serve features consistently for models
+In our platform, Feast is used as the abstraction layer on top of the Gold Data Mart (PostgreSQL).
+- Fetch features from Gold tables: Feast queries curated datasets (e.g., taxi marts) directly.
+- Hide data source complexity: Data scientists don’t need to know Database schemas, SQL queries, or Table locations.
+- Provide consistent feature definitions.
+To know how to use feast, we provide example code at: `tests/featurestore.ipynb`.
 
 ## Section 4: Online Pipeline
 
