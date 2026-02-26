@@ -9,7 +9,7 @@ def ingest_data(spark: SparkSession, dataset: str, month: int, year: int):
     logger.info(f"Reading data from Minio object: {minio_path}...")
         
     path_read = f"s3a://{settings.warehouse_bucket}/" + minio_path
-    df = spark.read.parquet(path_read)
+    df = spark.read.format("delta").load(path_read)
 
     return df
 

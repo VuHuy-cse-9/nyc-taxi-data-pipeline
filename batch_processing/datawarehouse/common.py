@@ -59,8 +59,11 @@ def write_to_warehouse(df: DataFrame, dataset_name: str):
     output_path = os.path.join(
         settings.dataset_name, 
         f"{dataset_name}.parquet")
-    df.write.parquet(
-        f"s3a://{settings.warehouse_bucket}/{output_path}", mode="overwrite", compression="snappy")
+    # df.write.parquet(
+    #     f"s3a://{settings.warehouse_bucket}/{output_path}", mode="overwrite", compression="snappy")
+
+    df.write.format("delta").save(f"s3a://{settings.warehouse_bucket}/{output_path}")
+
     return
 
 
