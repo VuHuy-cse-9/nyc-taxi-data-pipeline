@@ -106,7 +106,7 @@ Figure 3: Overview of offline data pipeline.
 
 In this component, we design a workflow that ingests offline data on the website, and step by step inserting and transforming them into Data Lake (Bronze), Data warehouse (Silver), and finally data mart (golden), where data analyst team could visualize and bring value to business.
 
-Specifically, we utilize Airflow as an orchestration while all the computation is based on Apache Spark. The data at bronze and silver are stored on Minio in Parquet format for storage optimization. At the final stage, we ingest the datamart in PostgreSQL, so data could be fetched data faster.
+Specifically, we utilize Airflow as an orchestration while all the computation is based on Apache Spark. The data at bronze and silver are stored on Minio in Parquet format for storage optimization. At the final stage, we ingest the datamart in PostgreSQL, so data could be fetched data faster. Additionally, we use Feast (Feature Store) as an abstraction layer on top of the datamart, enabling ML engineers to access features through a consistent API without needing to know the underlying data infrastructure.
 
 Business-targeted users (e.g Data Analyst Team) could use their Visualization tool (e.g Superset) to fetch data from PostgreSQL. Development users could inspect, fetch data in Data Lake, Data Warehouse, or even PostgreSQL via Trino Query Engine.
 
@@ -454,16 +454,109 @@ For each pipeline, I create 4 tasks:
 | run_datamart_X | Run Spark code that read data from Minio data-warehouse bucket, compute and insert into created partition in data mart. | DockerOperator |
 
 
-### 📔 Feast
-Feast (Feature Store) is a system that manages, serves, and version-controls machine learning features. It provides a unified interface to:
-- Discover available features
-- Retrieve historical features for training
-- Serve features consistently for models
-In our platform, Feast is used as the abstraction layer on top of the Gold Data Mart (PostgreSQL).
-- Fetch features from Gold tables: Feast queries curated datasets (e.g., taxi marts) directly.
-- Hide data source complexity: Data scientists don’t need to know Database schemas, SQL queries, or Table locations.
-- Provide consistent feature definitions.
-To know how to use feast, we provide example code at: `tests/featurestore.ipynb`.
+#### 🌿 Feature Store
+
+📔 **Overview**
+
+Feast (Feature Store) is an open-source feature store that serves as a centralized system for managing, storing, and serving machine learning features. In our platform, Feast acts as an abstraction layer between the ML engineering team and the underlying data infrastructure, providing:
+
+- **Feature Discovery**: Browse and discover available features across all taxi data sources
+- **Historical Features**: Retrieve point-in-time correct features for model training
+- **Online Features**: Serve low-latency features for real-time model inference
+- **Consistency**: Ensure training-serving consistency with unified feature definitions
+- **Versioning**: Track and version feature definitions over time
+
+In our architecture, Feast sits on top of the Gold Data Mart (PostgreSQL), abstracting away the complexity of SQL queries, table schemas, and data locations from ML engineers.
+
+🛠️ **Configuration**
+
+The Feast setup consists of the following components:
+
+**Storage Infrastructure:**
+- **Offline Store**: PostgreSQL (datamart) - Stores historical features for training datasets
+- **Online Store**: Redis - Provides low-latency feature serving for real-time predictions
+- **Registry**: SQL-based registry stored in PostgreSQL - Tracks feature definitions and metadata
+
+**Feature Repository Structure** (`feature_store/feature_repo/`):
+
+1. **`feature_store.yaml`**: Central configuration file defining:
+     - Project name and provider settings
+     - Offline store connection (PostgreSQL datamart)
+     - Online store connection (Redis)
+     - Registry configuration
+
+2. **`entities.py`**: Defines entity keys for joining features:
+     - `pickup_zone`: Primary entity using `pulocationid` as join key
+
+3. **`data_sources.py`**: Defines data sources from PostgreSQL datamart:
+     - `green_taxi_source`: Queries `green_taxi_mart` table
+     - `yellow_taxi_source`: Queries `yellow_taxi_mart` table
+     - `fhvhv_source`: Queries FHVHV mart table
+     - Each source specifies timestamp field (`pickup_datetime`) for point-in-time joins
+
+4. **`feature_views.py`**: Defines feature views and their schemas:
+     - `green_taxi_features`: trip_miles, passenger_count, fare_amount
+     - `yellow_taxi_features`: trip_miles, passenger_count, fare_amount
+     - `fhvhv_features`: trip_miles, passenger_count, fare_amount
+     - Each feature view has 365-day TTL (time-to-live)
+
+
+🚀 **Setup and Deployment**
+
+**1. Initialize Feast Repository:**
+```bash
+cd feature_store
+feast apply
+```
+This command registers all feature definitions (entities, sources, and views) to the registry.
+
+**2. Materialize Features to Online Store:**
+```bash
+# Materialize features for a specific time range
+feast materialize-incremental $(date +%Y-%m-%d)
+```
+This copies features from the offline store (PostgreSQL) to the online store (Redis) for low-latency serving.
+
+🔌 **API Endpoints**
+
+The FastAPI application (`feature_store/app.py`) provides the following endpoints:
+
+**POST `/get-features`**
+- **Purpose**: Retrieve features from online store for real-time inference
+- **Input**: List of `FeatureRequest` objects containing:
+    - `pulocationid`: Location zone ID
+    - `event_timestamp`: Timestamp for the feature request
+- **Output**: List of `FeatureResponse` objects with retrieved features
+- **Example Request**:
+```json
+[
+    {
+        "pulocationid": 93,
+        "event_timestamp": "2025-05-30T00:00:00"
+    },
+    {
+        "pulocationid": 92,
+        "event_timestamp": "2025-06-02T00:00:00"
+    }
+]
+```
+- **Example Response**:
+```json
+[
+    {
+        "pulocationid": 93,
+        "event_timestamp": "2025-05-30T00:00:00",
+        "trip_miles": 2.5,
+        "fare_amount": 12.0
+    },
+    {
+        "pulocationid": 92,
+        "event_timestamp": "2025-06-02T00:00:00",
+        "trip_miles": 3.2,
+        "fare_amount": 15.5
+    }
+]
+```
 
 ## Section 4: Online Pipeline
 

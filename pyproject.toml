@@ -47,3 +47,8 @@ conflicts = [
       { extra = "feast" }
     ],
 ]
+
+[tool.uv.workspace]
+members = [
+    "feature_store",
+]
