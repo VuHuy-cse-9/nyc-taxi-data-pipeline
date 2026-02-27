@@ -1993,6 +1993,7 @@ dependencies = [
     { name = "pydantic-settings", version = "2.12.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10' or (extra == 'extra-4-doan-feast' and extra == 'extra-4-doan-flink') or (extra == 'extra-4-doan-feast' and extra == 'extra-4-doan-spark') or (extra == 'extra-4-doan-flink' and extra == 'extra-4-doan-spark')" },
     { name = "pymongo" },
     { name = "python-dotenv" },
+    { name = "requests" },
     { name = "s3fs", version = "2025.10.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10' or (extra == 'extra-4-doan-feast' and extra == 'extra-4-doan-flink') or (extra == 'extra-4-doan-feast' and extra == 'extra-4-doan-spark') or (extra == 'extra-4-doan-flink' and extra == 'extra-4-doan-spark')" },
     { name = "s3fs", version = "2026.2.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10' or (extra == 'extra-4-doan-feast' and extra == 'extra-4-doan-flink') or (extra == 'extra-4-doan-feast' and extra == 'extra-4-doan-spark') or (extra == 'extra-4-doan-flink' and extra == 'extra-4-doan-spark')" },
 ]
@@ -2037,6 +2038,7 @@ requires-dist = [
     { name = "pymongo", specifier = ">=4.4.1" },
     { name = "pyspark", marker = "extra == 'spark'", specifier = "==4.0.2" },
     { name = "python-dotenv", specifier = ">=1.1.1" },
+    { name = "requests", specifier = "==2.32.4" },
     { name = "s3fs", specifier = ">=2025.10.0" },
     { name = "sqlalchemy", marker = "extra == 'feast'", specifier = ">=2.0" },
 ]
@@ -6447,8 +6449,8 @@ dependencies = [
     { name = "certifi" },
     { name = "charset-normalizer" },
     { name = "idna" },
-    { name = "urllib3", version = "1.26.20", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.10' and extra == 'extra-4-doan-feast') or (python_full_version < '3.10' and extra == 'extra-4-doan-flink') or (python_full_version < '3.10' and extra == 'extra-4-doan-spark') or (extra == 'extra-4-doan-feast' and extra == 'extra-4-doan-flink') or (extra == 'extra-4-doan-feast' and extra == 'extra-4-doan-spark') or (extra == 'extra-4-doan-flink' and extra == 'extra-4-doan-spark')" },
-    { name = "urllib3", version = "2.5.0", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.10' and extra == 'extra-4-doan-feast') or (python_full_version >= '3.10' and extra == 'extra-4-doan-flink') or (python_full_version >= '3.10' and extra == 'extra-4-doan-spark') or (extra == 'extra-4-doan-feast' and extra == 'extra-4-doan-flink') or (extra == 'extra-4-doan-feast' and extra == 'extra-4-doan-spark') or (extra == 'extra-4-doan-flink' and extra == 'extra-4-doan-spark')" },
+    { name = "urllib3", version = "1.26.20", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10' or (extra == 'extra-4-doan-feast' and extra == 'extra-4-doan-flink') or (extra == 'extra-4-doan-feast' and extra == 'extra-4-doan-spark') or (extra == 'extra-4-doan-flink' and extra == 'extra-4-doan-spark')" },
+    { name = "urllib3", version = "2.5.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10' or (extra == 'extra-4-doan-feast' and extra == 'extra-4-doan-flink') or (extra == 'extra-4-doan-feast' and extra == 'extra-4-doan-spark') or (extra == 'extra-4-doan-flink' and extra == 'extra-4-doan-spark')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/e1/0a/929373653770d8a0d7ea76c37de6e41f11eb07559b103b1c02cafb3f7cf8/requests-2.32.4.tar.gz", hash = "sha256:27d0316682c8a29834d3264820024b62a36942083d52caf2f14c0591336d3422", size = 135258, upload-time = "2025-06-09T16:43:07.34Z" }
 wheels = [
