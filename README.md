@@ -231,23 +231,57 @@ There would be a table for online feature. This table would be automatically cre
 
 #### 🌿 Trino Query Engine
 
-📔 **What does It use for?**
+📔 **What is it used for?**
 
-Trino is a distributed query engine that is used widely in the industry. In my system, beside the ability to scale, I mainly use it for connecting to various data system, namely Parquet on Minio and PostgrSQL. Therefore, the development team doesn’t have to use multiple query tools (e.g Spark Client for Minio’s parquet, Postgre client) but through an unified engine. It also facilitates for Devops or Database Administrators to track, monitor the query request.
+Trino is a distributed query engine that is widely used in the industry. In this system, besides scalability, Trino is mainly used to connect multiple data systems from one place, especially:
 
-🛠️ **Configuration**
+- Parquet files on Minio
+- PostgreSQL (datamart)
 
-Trino platform contains three components, where its configuration could be observed in `docker-compose.batch.yaml`: 1) Trino Query Engine itself. b) Hive-metastore, c) metastore-db.
+Because of that, the development team does not need to switch between multiple query clients (for example, Spark client for Minio parquet and PostgreSQL client for datamart). Trino provides a unified query layer and also helps DevOps/DBA teams monitor query activity.
 
-Trino requires hive-metastore to save it metadata related to source that it connect to. For example, connection information to S3-minio, PostgreSQL. Hive-metastore saves its data in metastore-db (a postgresql)
+🛠️ **Configuration**
 
-In order to make Trino know S3-minio connection information, I create a property file `local/trino/catalog/dwh.properties` , and mount this file to `/etc/trino/catalog`.
+The Trino platform in this project contains three components (configured in `docker-compose.batch.yaml`):
 
-Currently, I host Trino in a standalone mode (single app shared both as Trino master and worker). In production, a further step that splits Trino’s master and worker is required.
+1. Trino Query Engine
+2. Hive Metastore
+3. Metastore DB (PostgreSQL)
 
-Finally, you could verify Trino via database connection software such as DBeaver.
+Trino uses Hive Metastore to store metadata about connected sources (for example, S3/Minio and PostgreSQL connection information). Hive Metastore itself persists metadata in Metastore DB.
+
+To provide S3-Minio connection information for Trino, the project defines `local/trino/catalog/dwh.properties` and mounts it into `/etc/trino/catalog` inside the Trino container.
+
+Currently, Trino runs in standalone mode (single service acting as both coordinator/master and worker). In production, it is recommended to separate master/coordinator and worker nodes.
+
+You can verify Trino connectivity using a database client such as DBeaver.
 
 <!-- - TODO: Currently, I couldn’t visualize our parquet file via Trino. To visualize it, it seems that we need to write sql that define table schemas, path to parquet for Trino. Where script I have forgotten -->
+🚀 **Steps to load data from S3 into Trino**
+
+1. Exec into Trino container: `nyc-taxi-data-pipeline-trino-1`
+2. Start Trino CLI: `trino`
+3. Run the following SQL commands:
+```sql
+-- CREATE SCHEMA --
+CREATE SCHEMA dwh.nyc_taxi
+WITH (location = 's3a://data-warehouse/nyc_taxi_dataset');
+
+-- Register Green Taxi tables in the schema --
+CALL dwh.system.register_table(schema_name => 'nyc_taxi', table_name => 'green_taxi', table_location => 's3://data-warehouse/nyc_taxi_dataset/green_taxi/11_2025.parquet');
+
+-- Register Yellow Taxi tables in the schema --
+CALL dwh.system.register_table(schema_name => 'nyc_taxi', table_name => 'yellow_taxi', table_location => 's3://data-warehouse/nyc_taxi_dataset/yellow_taxi/11_2025.parquet');
+
+-- Register For-Hire Vehicle (FHV) Taxi tables in the schema --
+CALL dwh.system.register_table(schema_name => 'nyc_taxi', table_name => 'fhv_taxi', table_location => 's3://data-warehouse/nyc_taxi_dataset/for_hire_vehicle/11_2025.parquet');
+```
+![run-command-create-schemas-and-table](assets/section3/image8.png)
+
+
+(\*) Note: You can do the same steps through DBeaver, then visualize the data directly in DBeaver as well:
+![trino-through-debeaver](assets/section3/image9.png)
+
 
 ### 🌿 Spark Cluster
 
