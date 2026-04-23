@@ -1,0 +1,20 @@
+project: nyc_taxi
+provider: local
+
+registry:
+  registry_type: sql
+  path: ${FEAST_REGISTRY_URL}
+
+offline_store:
+  type: postgres
+  host: ${DATAMART_ENDPOINT}
+  port: ${DATAMART_PORT}
+  database: ${DATAMART_DB}
+  user: ${DATAMART_USER}
+  password: ${DATAMART_PASSWORD}
+  db_schema: public
+
+online_store:
+  type: redis
+  connection_string: ${FEAST_ONLINE_STORE}
+  key_ttl_seconds: 86400   # optional (1 day)

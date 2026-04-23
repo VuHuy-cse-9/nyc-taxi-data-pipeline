@@ -1,0 +1,5 @@
+java version: 21, 21.0.7 LTS
+
+# 1. Batch processing:
+install java package: bundle-2.32.24.jar
+wget https://repo1.maven.org/maven2/software/amazon/awssdk/bundle-sdk/2.32.24/bundle-sdk-2.32.24.jar

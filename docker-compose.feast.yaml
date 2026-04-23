@@ -1,0 +1,23 @@
+networks:
+  doan_nyc_network:
+    external: true
+services:
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+      - '6379:6379'
+    networks:
+      - doan_nyc_network
+
+
+  feast-backend:
+    image: feast-backend:latest
+    build: ./feature_store
+    container_name: feast-backend
+    ports:
+      - '8999:8000'
+    depends_on:
+      - redis
+    networks:
+      - doan_nyc_network
